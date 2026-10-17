@@ -12,7 +12,7 @@ import {
 import paymentsCsv from "../../../data/payments.csv?raw";
 import priceCsv from "../../../data/price_list.csv?raw";
 import { lookupPrices, lookupPricesV2 } from "#/lib/rules/index.ts";
-import { buildReview } from "./review.ts";
+import { buildReview, cashflowByMonth } from "./review.ts";
 
 const invoiceFiles = import.meta.glob("../../../data/invoices/*.json", {
 	eager: true,
@@ -31,3 +31,5 @@ export const reviews = {
 	v1: buildReview(invoices, prices, payments, "USD", lookupPrices),
 	v2: buildReview(invoices, prices, payments, "USD", lookupPricesV2),
 };
+
+export const cashflow = cashflowByMonth(invoices, payments);

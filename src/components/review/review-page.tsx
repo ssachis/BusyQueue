@@ -6,7 +6,8 @@ import { Textarea } from "#/components/ui/textarea.tsx";
 import type { FindingKind } from "#/lib/busyq/types.ts";
 import { formatMoney, toMinor } from "#/lib/money/index.ts";
 import { cn } from "#/lib/utils.ts";
-import { reviews } from "./data.ts";
+import { CashflowChart } from "./cashflow-chart.tsx";
+import { cashflow, reviews } from "./data.ts";
 import {
 	disputeDraft,
 	type InvoiceReview,
@@ -134,11 +135,29 @@ export function ReviewPage() {
 				/>
 
 				<div className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-					<section aria-label="Invoices">
+					<section aria-label="Invoices" className="space-y-5">
+						<div className="rounded-3xl bg-gradient-to-br from-sidebar to-chart-1 p-6 text-sidebar-foreground shadow-lg shadow-chart-1/20">
+							<div className="flex items-baseline justify-between gap-3">
+								<h2 className="text-sm font-medium">Cash flow</h2>
+								<ul className="flex gap-4 text-xs text-sidebar-foreground/80">
+									<li className="flex items-center gap-1.5">
+										<span aria-hidden className="size-2 rounded-full bg-chart-1" />
+										Bills in
+									</li>
+									<li className="flex items-center gap-1.5">
+										<span aria-hidden className="size-2 rounded-full bg-chart-2" />
+										Paid out
+									</li>
+								</ul>
+							</div>
+							<div className="mt-3">
+								<CashflowChart data={cashflow} />
+							</div>
+						</div>
 						<div
 							role="tablist"
 							aria-label="Filter invoices"
-							className="flex flex-wrap gap-x-5 gap-y-1 border-b"
+							className="flex gap-1 rounded-xl bg-muted p-1"
 						>
 							{FILTERS.map((f) => (
 								<button
@@ -148,9 +167,9 @@ export function ReviewPage() {
 									aria-selected={filter === f.id}
 									onClick={() => setFilter(f.id)}
 									className={cn(
-										"-mb-px border-b-2 border-transparent pb-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+										"flex-1 rounded-lg px-2 py-1.5 text-center text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
 										filter === f.id &&
-											"border-foreground font-medium text-foreground",
+											"bg-card font-medium text-foreground shadow-sm",
 									)}
 								>
 									{f.label}{" "}
@@ -160,7 +179,7 @@ export function ReviewPage() {
 								</button>
 							))}
 						</div>
-						<ul className="max-h-[34rem] divide-y overflow-y-auto">
+						<ul className="max-h-[30rem] divide-y overflow-y-auto rounded-2xl bg-card shadow-sm ring-1 ring-border">
 							{visible.map((r) => {
 								const done = approvedIds.has(r.invoice.id);
 								return (
@@ -170,7 +189,7 @@ export function ReviewPage() {
 											onClick={() => setSelectedId(r.invoice.id)}
 											aria-current={selectedId === r.invoice.id}
 											className={cn(
-												"flex w-full items-center gap-3 px-2 py-3 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+												"flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
 												selectedId === r.invoice.id && "bg-accent",
 											)}
 										>
@@ -186,7 +205,7 @@ export function ReviewPage() {
 													{r.invoice.vendor}
 												</span>
 												<span className="block truncate text-xs text-muted-foreground">
-													{r.invoice.invoiceNumber} · {r.invoice.issueDate}
+													{r.invoice.invoiceNumber}
 													{done ? " · Approved" : ""}
 												</span>
 											</span>
@@ -281,16 +300,14 @@ function Hero({
 			<div className="flex flex-wrap items-start justify-between gap-4">
 				<div>
 					<p className="text-sm text-muted-foreground">
-						Northfield Unified School District food service
-					</p>
-					<p className="mt-1 text-sm text-muted-foreground">
-						{totals.invoices} vendor invoices checked against the contract
+						Northfield Unified School District · {totals.invoices} invoices
+						checked
 					</p>
 				</div>
 				<div
 					role="radiogroup"
 					aria-label="How prices are matched"
-					className="inline-flex rounded-full border p-0.5 text-sm"
+					className="inline-flex rounded-full bg-muted p-1 text-sm"
 				>
 					{(
 						[
@@ -307,7 +324,7 @@ function Hero({
 							className={cn(
 								"rounded-full px-4 py-1.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
 								version === v &&
-									"bg-primary text-primary-foreground hover:text-primary-foreground",
+									"bg-card font-medium text-foreground shadow-sm hover:text-foreground",
 							)}
 						>
 							{label}
@@ -317,11 +334,11 @@ function Hero({
 			</div>
 
 			<div>
-				<div className="text-6xl font-semibold tracking-tight tabular-nums sm:text-7xl">
+				<div className="bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-6xl font-semibold tracking-tighter tabular-nums text-transparent sm:text-7xl">
 					{usd(total)}
 				</div>
 				<p className="mt-2 text-lg text-muted-foreground">
-					lost to billing mistakes, ready to recover
+					lost to billing mistakes. Ready to recover.
 				</p>
 			</div>
 
@@ -366,7 +383,7 @@ function Hero({
 				)}
 			>
 				{totals.unpricedLines > 0
-					? `Exact match couldn't read ${totals.unpricedLines} invoice lines because the vendor or unit is spelled differently from the contract. Those lines were never checked, so overcharges on them are hidden. Switch to Smart match.`
+					? `${totals.unpricedLines} invoice lines were never checked: the vendor or unit is spelled differently from the contract. Try Smart match.`
 					: version === "v2"
 						? "Smart match checked every invoice line against the contract."
 						: "Every invoice line was checked."}
