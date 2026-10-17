@@ -36,7 +36,9 @@ describe("rankMatches", () => {
 	});
 
 	it("matches on any key, such as the item code", () => {
-		expect(rankMatches("eg-", items, keys).map((i) => i.name)).toEqual(["Eggs"]);
+		expect(rankMatches("eg-", items, keys).map((i) => i.name)).toEqual([
+			"Eggs",
+		]);
 	});
 
 	it("returns the first items for an empty query and honours the limit", () => {

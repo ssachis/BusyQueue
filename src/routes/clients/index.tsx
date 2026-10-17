@@ -16,7 +16,8 @@ const Search = z.object({
 export const Route = createFileRoute("/clients/")({
 	validateSearch: (search) => Search.parse(search),
 	loaderDeps: ({ search }) => search,
-	loader: ({ deps }) => getClients({ data: { includeArchived: deps.archived } }),
+	loader: ({ deps }) =>
+		getClients({ data: { includeArchived: deps.archived } }),
 	component: ClientList,
 });
 
@@ -51,7 +52,10 @@ function ClientList() {
 						className="max-w-xs"
 					/>
 					<Button asChild variant={archived ? "default" : "outline"} size="sm">
-						<Link to="/clients" search={{ archived: archived ? undefined : true }}>
+						<Link
+							to="/clients"
+							search={{ archived: archived ? undefined : true }}
+						>
 							Show archived
 						</Link>
 					</Button>
@@ -72,7 +76,9 @@ function ClientList() {
 									<th className="px-4 py-3 font-medium">Name</th>
 									<th className="px-4 py-3 font-medium">City</th>
 									<th className="px-4 py-3 font-medium">Tax ID</th>
-									<th className="px-4 py-3 text-right font-medium">Documents</th>
+									<th className="px-4 py-3 text-right font-medium">
+										Documents
+									</th>
 								</tr>
 							</thead>
 							<tbody>

@@ -40,7 +40,9 @@ const source: SourceDocument = {
 describe("conversionTargets", () => {
 	it("lets an issued quote become an invoice", () => {
 		expect(conversionTargets("quote", "issued")).toEqual(["invoice"]);
-		expect(canConvert({ type: "quote", status: "issued" }, "invoice")).toBe(true);
+		expect(canConvert({ type: "quote", status: "issued" }, "invoice")).toBe(
+			true,
+		);
 	});
 
 	it("lets an issued invoice become a receipt, credit note or delivery note", () => {
@@ -57,7 +59,9 @@ describe("conversionTargets", () => {
 	});
 
 	it("rejects conversions that are not listed", () => {
-		expect(canConvert({ type: "quote", status: "issued" }, "receipt")).toBe(false);
+		expect(canConvert({ type: "quote", status: "issued" }, "receipt")).toBe(
+			false,
+		);
 		expect(canConvert({ type: "receipt", status: "issued" }, "invoice")).toBe(
 			false,
 		);

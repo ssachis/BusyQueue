@@ -30,7 +30,9 @@ function NewItem() {
 							toast.success("Item added");
 							await navigate({ to: "/catalog" });
 						} catch (err) {
-							toast.error(err instanceof Error ? err.message : "Could not save");
+							toast.error(
+								err instanceof Error ? err.message : "Could not save",
+							);
 						}
 					}}
 				/>

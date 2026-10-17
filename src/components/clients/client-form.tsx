@@ -3,10 +3,7 @@ import { Button } from "#/components/ui/button.tsx";
 import { Input } from "#/components/ui/input.tsx";
 import { Label } from "#/components/ui/label.tsx";
 import { BUSINESS_COUNTRIES } from "#/lib/business/profile.ts";
-import {
-	ClientInput,
-	type ClientFormInput,
-} from "#/lib/clients/client.ts";
+import { type ClientFormInput, ClientInput } from "#/lib/clients/client.ts";
 
 export type ClientFormValues = {
 	[K in keyof ClientFormInput]: string;

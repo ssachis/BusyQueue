@@ -13,11 +13,7 @@ import {
 } from "#/components/ui/card.tsx";
 import { Skeleton } from "#/components/ui/skeleton.tsx";
 import { getDocumentHistory } from "#/server/documents/convert.ts";
-import {
-	STATUS_LABEL,
-	STATUS_VARIANT,
-	TYPE_LABEL,
-} from "../preview/format.ts";
+import { STATUS_LABEL, STATUS_VARIANT, TYPE_LABEL } from "../preview/format.ts";
 import { describeActivity } from "./describe.ts";
 
 export const historyKey = (documentId: string) => [

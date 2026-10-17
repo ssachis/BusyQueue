@@ -1,4 +1,8 @@
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	useNavigate,
+	useRouter,
+} from "@tanstack/react-router";
 import { toast } from "sonner";
 import { PageBody, PageHeader } from "#/components/app-shell.tsx";
 import { ClientForm } from "#/components/clients/client-form.tsx";
@@ -38,7 +42,9 @@ function EditClient() {
 	async function remove() {
 		try {
 			const outcome = await removeClientRecord({ data: { id: client.id } });
-			toast.success(outcome === "deleted" ? "Client deleted" : "Client archived");
+			toast.success(
+				outcome === "deleted" ? "Client deleted" : "Client archived",
+			);
 			await navigate({ to: "/clients" });
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : "Could not remove");
@@ -81,11 +87,15 @@ function EditClient() {
 					submitLabel="Save changes"
 					onSubmit={async (values) => {
 						try {
-							await updateClientRecord({ data: { id: client.id, client: values } });
+							await updateClientRecord({
+								data: { id: client.id, client: values },
+							});
 							await router.invalidate();
 							toast.success("Client saved");
 						} catch (err) {
-							toast.error(err instanceof Error ? err.message : "Could not save");
+							toast.error(
+								err instanceof Error ? err.message : "Could not save",
+							);
 						}
 					}}
 				/>

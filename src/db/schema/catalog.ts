@@ -1,11 +1,6 @@
 /** Catalog items: reusable document lines (price, unit, tax rate, code). */
 import { sql } from "drizzle-orm";
-import {
-	index,
-	sqliteTable,
-	text,
-	uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+import { index, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { businesses } from "./business.ts";
 
 const now = sql`(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`;

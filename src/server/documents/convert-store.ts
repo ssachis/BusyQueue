@@ -76,7 +76,9 @@ function insertDraft(newId: string, draft: DocumentDraft) {
 			notes: draft.notes ?? null,
 			terms: draft.terms ?? null,
 		}),
-		...draft.lines.map((l) => db.insert(documentLines).values(toLineRow(newId, l))),
+		...draft.lines.map((l) =>
+			db.insert(documentLines).values(toLineRow(newId, l)),
+		),
 	] as const;
 }
 
@@ -106,7 +108,11 @@ export async function convertDocument(input: {
 		activityInsert(db, {
 			documentId: newId,
 			kind: "created",
-			detail: { type: input.to, convertedFrom: document.id, number: document.number },
+			detail: {
+				type: input.to,
+				convertedFrom: document.id,
+				number: document.number,
+			},
 		}),
 		activityInsert(db, {
 			documentId: document.id,
@@ -131,7 +137,11 @@ export async function duplicateDocument(input: {
 		activityInsert(db, {
 			documentId: newId,
 			kind: "created",
-			detail: { type: draft.type, duplicatedFrom: document.id, number: document.number },
+			detail: {
+				type: draft.type,
+				duplicatedFrom: document.id,
+				number: document.number,
+			},
 		}),
 		activityInsert(db, {
 			documentId: document.id,
@@ -156,19 +166,26 @@ export interface DocumentHistory {
 		id: number;
 		kind: string;
 		actor: string;
-		detail: Record<string, unknown> | null;
+		/** JSON-safe so it can cross the server-function boundary. */
+		detail: ActivityDetail | null;
 		at: string;
 	}[];
 }
 
+type ActivityDetail = Record<string, string | number | boolean | null>;
+
 /** Linked documents and the activity log of one document, oldest first. */
-export async function loadHistory(documentId: string): Promise<DocumentHistory> {
+export async function loadHistory(
+	documentId: string,
+): Promise<DocumentHistory> {
 	const db = getDb();
 	const businessId = currentBusinessId();
 	const [own] = await db
 		.select({ id: documents.id })
 		.from(documents)
-		.where(and(eq(documents.id, documentId), eq(documents.businessId, businessId)));
+		.where(
+			and(eq(documents.id, documentId), eq(documents.businessId, businessId)),
+		);
 	if (!own) throw new Error("Document not found");
 	const [related, activity] = await Promise.all([
 		db
@@ -189,5 +206,14 @@ export async function loadHistory(documentId: string): Promise<DocumentHistory> 
 			.where(eq(documentActivity.documentId, documentId))
 			.orderBy(asc(documentActivity.at), asc(documentActivity.id)),
 	]);
-	return { related, activity };
+	return {
+		related,
+		activity: activity.map((a) => ({
+			id: a.id,
+			kind: a.kind,
+			actor: a.actor,
+			detail: (a.detail as ActivityDetail | null) ?? null,
+			at: a.at,
+		})),
+	};
 }

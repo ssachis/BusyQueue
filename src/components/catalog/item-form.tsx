@@ -3,8 +3,8 @@ import { Button } from "#/components/ui/button.tsx";
 import { Input } from "#/components/ui/input.tsx";
 import { Label } from "#/components/ui/label.tsx";
 import {
-	CatalogItemInput,
 	type CatalogItemFormInput,
+	CatalogItemInput,
 } from "#/lib/catalog/item.ts";
 
 export type ItemFormValues = {
@@ -29,7 +29,12 @@ type Props = {
 	onSubmit: (item: CatalogItemInput) => Promise<void>;
 };
 
-export function ItemForm({ initial, submitLabel, taxOptions, onSubmit }: Props) {
+export function ItemForm({
+	initial,
+	submitLabel,
+	taxOptions,
+	onSubmit,
+}: Props) {
 	const [form, setForm] = useState(initial);
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [saving, setSaving] = useState(false);
