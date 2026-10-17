@@ -57,6 +57,13 @@
       "when": 1792263505521,
       "tag": "0007_invoice_imports",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1792264123633,
+      "tag": "0008_reminders",
+      "breakpoints": true
     }
   ]
 }
