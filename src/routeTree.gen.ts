@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiRunsRouteImport } from './routes/api/runs'
+import { Route as ContractsIndexRouteImport } from './routes/contracts/index'
+import { Route as ContractsContractIdRouteImport } from './routes/contracts/$contractId'
+import { Route as ContractsNewRouteImport } from './routes/contracts/new'
 import { Route as SettingsBusinessRouteImport } from './routes/settings/business'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +32,21 @@ const ApiRunsRoute = ApiRunsRouteImport.update({
   path: '/api/runs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContractsIndexRoute = ContractsIndexRouteImport.update({
+  id: '/contracts/',
+  path: '/contracts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContractsContractIdRoute = ContractsContractIdRouteImport.update({
+  id: '/contracts/$contractId',
+  path: '/contracts/$contractId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContractsNewRoute = ContractsNewRouteImport.update({
+  id: '/contracts/new',
+  path: '/contracts/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsBusinessRoute = SettingsBusinessRouteImport.update({
   id: '/settings/business',
   path: '/settings/business',
@@ -39,34 +57,68 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/runs': typeof ApiRunsRoute
+  '/contracts/$contractId': typeof ContractsContractIdRoute
+  '/contracts/new': typeof ContractsNewRoute
   '/settings/business': typeof SettingsBusinessRoute
+  '/contracts/': typeof ContractsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/runs': typeof ApiRunsRoute
+  '/contracts/$contractId': typeof ContractsContractIdRoute
+  '/contracts/new': typeof ContractsNewRoute
   '/settings/business': typeof SettingsBusinessRoute
+  '/contracts': typeof ContractsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/runs': typeof ApiRunsRoute
+  '/contracts/$contractId': typeof ContractsContractIdRoute
+  '/contracts/new': typeof ContractsNewRoute
   '/settings/business': typeof SettingsBusinessRoute
+  '/contracts/': typeof ContractsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/chat' | '/api/runs' | '/settings/business'
+  fullPaths:
+    | '/'
+    | '/api/chat'
+    | '/api/runs'
+    | '/contracts/$contractId'
+    | '/contracts/new'
+    | '/settings/business'
+    | '/contracts/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/chat' | '/api/runs' | '/settings/business'
-  id: '__root__' | '/' | '/api/chat' | '/api/runs' | '/settings/business'
+  to:
+    | '/'
+    | '/api/chat'
+    | '/api/runs'
+    | '/contracts/$contractId'
+    | '/contracts/new'
+    | '/settings/business'
+    | '/contracts'
+  id:
+    | '__root__'
+    | '/'
+    | '/api/chat'
+    | '/api/runs'
+    | '/contracts/$contractId'
+    | '/contracts/new'
+    | '/settings/business'
+    | '/contracts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiRunsRoute: typeof ApiRunsRoute
+  ContractsContractIdRoute: typeof ContractsContractIdRoute
+  ContractsNewRoute: typeof ContractsNewRoute
   SettingsBusinessRoute: typeof SettingsBusinessRoute
+  ContractsIndexRoute: typeof ContractsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,6 +144,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRunsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contracts/': {
+      id: '/contracts/'
+      path: '/contracts'
+      fullPath: '/contracts/'
+      preLoaderRoute: typeof ContractsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contracts/$contractId': {
+      id: '/contracts/$contractId'
+      path: '/contracts/$contractId'
+      fullPath: '/contracts/$contractId'
+      preLoaderRoute: typeof ContractsContractIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contracts/new': {
+      id: '/contracts/new'
+      path: '/contracts/new'
+      fullPath: '/contracts/new'
+      preLoaderRoute: typeof ContractsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings/business': {
       id: '/settings/business'
       path: '/settings/business'
@@ -106,7 +179,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiChatRoute: ApiChatRoute,
   ApiRunsRoute: ApiRunsRoute,
+  ContractsContractIdRoute: ContractsContractIdRoute,
+  ContractsNewRoute: ContractsNewRoute,
   SettingsBusinessRoute: SettingsBusinessRoute,
+  ContractsIndexRoute: ContractsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

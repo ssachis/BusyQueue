@@ -33,6 +33,23 @@ const serverEnvSchema = z.object({
 	/** Default price-lookup version when a run doesn't ask for one. */
 	AGENT_VERSION: z.enum(["v1", "v2"]).default("v1"),
 
+	// ── Contracts → price list ──
+	/** Model that reads contracts and transcribes their terms and prices. */
+	CONTRACT_MODEL: z.string().min(1).default("anthropic/claude-sonnet-5-5"),
+	/**
+	 * Comma-separated models Nicrron falls back to, in order, when
+	 * CONTRACT_MODEL errors or is rate-limited (sent as `models`).
+	 */
+	CONTRACT_FALLBACK_MODELS: z
+		.string()
+		.default("openai/gpt-5.4-mini,anthropic/claude-haiku-5-5")
+		.transform((v) =>
+			v
+				.split(",")
+				.map((m) => m.trim())
+				.filter(Boolean),
+		),
+
 	// ── PRISM tracing (disabled when the key is unset) ──
 	PRISMTRACE_API_KEY: optionalString,
 	PRISMTRACE_PROJECT_ID: optionalString,

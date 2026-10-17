@@ -43,6 +43,13 @@
       "when": 1792263271350,
       "tag": "0005_documents_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1792263442365,
+      "tag": "0006_contracts",
+      "breakpoints": true
     }
   ]
 }
