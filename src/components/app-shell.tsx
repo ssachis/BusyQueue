@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Wordmark } from "#/components/logo.tsx";
-import { ThemeToggle } from "#/components/theme-toggle.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import { mainNav } from "#/config/nav.ts";
 import { siteConfig } from "#/config/site.ts";
@@ -62,7 +61,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 				</div>
 				<div className="relative flex items-center justify-between px-5 py-5">
 					<span className="text-xs text-sidebar-foreground/50">Demo data</span>
-					<ThemeToggle className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
 				</div>
 			</aside>
 
@@ -116,9 +114,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 					</div>
 					<div className="flex-1 px-3">
 						<NavLinks onNavigate={() => setOpen(false)} />
-					</div>
-					<div className="px-3 py-4">
-						<ThemeToggle />
 					</div>
 				</div>
 			</div>
