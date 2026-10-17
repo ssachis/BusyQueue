@@ -8,6 +8,7 @@ import * as documentPayments from "./schema/document-payments.ts";
 import * as documents from "./schema/documents.ts";
 import * as imports from "./schema/imports.ts";
 import * as numbering from "./schema/numbering.ts";
+import * as reminders from "./schema/reminders.ts";
 
 export const schema = {
 	...busyq,
@@ -18,6 +19,7 @@ export const schema = {
 	...documentPayments,
 	...contracts,
 	...imports,
+	...reminders,
 };
 
 /** Drizzle client on the Worker's D1 binding. Server-only. */
