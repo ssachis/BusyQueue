@@ -76,148 +76,146 @@ export function ReviewPage() {
 		navigate({ search: (s) => ({ ...s, invoice: id }) });
 
 	return (
-		<>
-			<PageBody className="space-y-8">
-				<header className="grid items-center gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-					<div className="space-y-5">
-						<div className="flex flex-wrap items-center justify-between gap-3">
-							<p className="text-sm text-muted-foreground">
-								Northfield Unified · {totals.run} of {totals.invoices} checked
-							</p>
-							<fieldset className="flex items-center gap-1 rounded-full border bg-card p-1">
-								<legend className="sr-only">Agent version</legend>
-								{(["v1", "v2"] as const).map((ver) => (
-									<Button
-										key={ver}
-										size="sm"
-										variant={v === ver ? "default" : "ghost"}
-										className="rounded-full"
-										onClick={() => setVersion(ver)}
-									>
-										Agent {ver}
-									</Button>
-								))}
-							</fieldset>
-						</div>
-						<div>
-							<div className="text-6xl font-semibold tracking-tighter tabular-nums sm:text-7xl">
-								{money(totals.recoverableMinor + totals.orphanMinor, currency)}
-							</div>
-							<p className="mt-2 text-lg text-muted-foreground">
-								lost to billing mistakes
-							</p>
-						</div>
+		<PageBody className="space-y-8">
+			<header className="grid items-center gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+				<div className="space-y-5">
+					<div className="flex flex-wrap items-center justify-between gap-3">
 						<p className="text-sm text-muted-foreground">
-							{plural(totals.flagged, "invoice")} flagged
-							{totals.orphanMinor > 0
-								? ` · ${money(totals.orphanMinor, currency)} paid with no invoice`
-								: ""}
+							Northfield Unified · {totals.run} of {totals.invoices} checked
+						</p>
+						<fieldset className="flex items-center gap-1 rounded-full border bg-card p-1">
+							<legend className="sr-only">Agent version</legend>
+							{(["v1", "v2"] as const).map((ver) => (
+								<Button
+									key={ver}
+									size="sm"
+									variant={v === ver ? "default" : "ghost"}
+									className="rounded-full"
+									onClick={() => setVersion(ver)}
+								>
+									Agent {ver}
+								</Button>
+							))}
+						</fieldset>
+					</div>
+					<div>
+						<div className="text-6xl font-semibold tracking-tighter tabular-nums sm:text-7xl">
+							{money(totals.recoverableMinor + totals.orphanMinor, currency)}
+						</div>
+						<p className="mt-2 text-lg text-muted-foreground">
+							lost to billing mistakes
 						</p>
 					</div>
-					<div className="rounded-3xl bg-gradient-to-br from-chart-1 to-chart-5 p-6 text-primary-foreground shadow-lg">
-						<div className="flex items-baseline justify-between gap-3">
-							<h2 className="text-base font-semibold">Cash flow</h2>
-							<ul className="flex gap-4 text-xs text-primary-foreground/80">
-								<li className="flex items-center gap-1.5">
-									<span
-										aria-hidden
-										className="size-2 rounded-full bg-primary-foreground"
-									/>
-									Bills in
-								</li>
-								<li className="flex items-center gap-1.5">
-									<span
-										aria-hidden
-										className="size-2 rounded-full bg-primary-foreground/50"
-									/>
-									Paid out
-								</li>
-							</ul>
-						</div>
-						<div className="mt-3">
-							<CashflowChart data={summary.cashflow} />
-						</div>
-					</div>
-				</header>
-
-				<FailuresPanel summary={summary} />
-
-				<div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-					<Card className="gap-4">
-						<CardHeader>
-							<CardTitle>Invoices</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<ul className="max-h-[34rem] divide-y overflow-y-auto rounded-md border">
-								{summary.invoices.map((r) => {
-									const st = rowStatus(r);
-									return (
-										<li key={r.id}>
-											<button
-												type="button"
-												onClick={() => select(r.id)}
-												className={cn(
-													"flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
-													invoiceId === r.id && "bg-accent",
-												)}
-											>
-												<span className="min-w-0">
-													<span className="block truncate font-medium">
-														{r.invoiceNumber}
-													</span>
-													<span className="block truncate text-xs text-muted-foreground">
-														{r.vendor}
-													</span>
-												</span>
-												<span className="flex shrink-0 items-center gap-2">
-													{(r.run?.totalMinor ?? 0) > 0 ? (
-														<span className="text-xs font-medium">
-															{money(r.run?.totalMinor ?? 0, currency)}
-														</span>
-													) : null}
-													<Badge variant={st.variant}>{st.label}</Badge>
-												</span>
-											</button>
-										</li>
-									);
-								})}
-							</ul>
-						</CardContent>
-					</Card>
-
-					{detail ? (
-						<InvoicePanel
-							key={`${detail.invoice.id}-${v}-${detail.run?.id ?? "none"}`}
-							detail={detail}
-							version={v}
-						/>
-					) : null}
+					<p className="text-sm text-muted-foreground">
+						{plural(totals.flagged, "invoice")} flagged
+						{totals.orphanMinor > 0
+							? ` · ${money(totals.orphanMinor, currency)} paid with no invoice`
+							: ""}
+					</p>
 				</div>
+				<div className="rounded-3xl bg-gradient-to-br from-chart-1 to-chart-5 p-6 text-primary-foreground shadow-lg">
+					<div className="flex items-baseline justify-between gap-3">
+						<h2 className="text-base font-semibold">Cash flow</h2>
+						<ul className="flex gap-4 text-xs text-primary-foreground/80">
+							<li className="flex items-center gap-1.5">
+								<span
+									aria-hidden
+									className="size-2 rounded-full bg-primary-foreground"
+								/>
+								Bills in
+							</li>
+							<li className="flex items-center gap-1.5">
+								<span
+									aria-hidden
+									className="size-2 rounded-full bg-primary-foreground/50"
+								/>
+								Paid out
+							</li>
+						</ul>
+					</div>
+					<div className="mt-3">
+						<CashflowChart data={summary.cashflow} />
+					</div>
+				</div>
+			</header>
 
-				{summary.orphans.length > 0 ? (
-					<Card className="gap-4">
-						<CardHeader>
-							<CardTitle>Payments with no invoice</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<ul className="divide-y rounded-md border text-sm">
-								{summary.orphans.map((f) => (
-									<li
-										key={f.paymentId}
-										className="flex items-start justify-between gap-4 px-3 py-2"
-									>
-										<span>{f.detail}</span>
-										<span className="shrink-0 font-medium">
-											{money(f.impactMinor, f.currency)}
-										</span>
+			<FailuresPanel summary={summary} />
+
+			<div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+				<Card className="gap-4">
+					<CardHeader>
+						<CardTitle>Invoices</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<ul className="max-h-[34rem] divide-y overflow-y-auto rounded-md border">
+							{summary.invoices.map((r) => {
+								const st = rowStatus(r);
+								return (
+									<li key={r.id}>
+										<button
+											type="button"
+											onClick={() => select(r.id)}
+											className={cn(
+												"flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
+												invoiceId === r.id && "bg-accent",
+											)}
+										>
+											<span className="min-w-0">
+												<span className="block truncate font-medium">
+													{r.invoiceNumber}
+												</span>
+												<span className="block truncate text-xs text-muted-foreground">
+													{r.vendor}
+												</span>
+											</span>
+											<span className="flex shrink-0 items-center gap-2">
+												{(r.run?.totalMinor ?? 0) > 0 ? (
+													<span className="text-xs font-medium">
+														{money(r.run?.totalMinor ?? 0, currency)}
+													</span>
+												) : null}
+												<Badge variant={st.variant}>{st.label}</Badge>
+											</span>
+										</button>
 									</li>
-								))}
-							</ul>
-						</CardContent>
-					</Card>
+								);
+							})}
+						</ul>
+					</CardContent>
+				</Card>
+
+				{detail ? (
+					<InvoicePanel
+						key={`${detail.invoice.id}-${v}-${detail.run?.id ?? "none"}`}
+						detail={detail}
+						version={v}
+					/>
 				) : null}
-			</PageBody>
-		</>
+			</div>
+
+			{summary.orphans.length > 0 ? (
+				<Card className="gap-4">
+					<CardHeader>
+						<CardTitle>Payments with no invoice</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<ul className="divide-y rounded-md border text-sm">
+							{summary.orphans.map((f) => (
+								<li
+									key={f.paymentId}
+									className="flex items-start justify-between gap-4 px-3 py-2"
+								>
+									<span>{f.detail}</span>
+									<span className="shrink-0 font-medium">
+										{money(f.impactMinor, f.currency)}
+									</span>
+								</li>
+							))}
+						</ul>
+					</CardContent>
+				</Card>
+			) : null}
+		</PageBody>
 	);
 }
 
