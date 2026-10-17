@@ -6,7 +6,19 @@
 import type OpenAI from "openai";
 import type { AgentVersion, Finding } from "#/lib/busyq/types.ts";
 import { type Money, zero } from "#/lib/money/index.ts";
+import {
+	CACHE_HEADER,
+	fallbackList,
+	generationCost,
+	isRoutingPreset,
+} from "#/server/nicrron.ts";
 import type { RunTracer } from "#/server/prism.ts";
+import {
+	type GatewaySummary,
+	gatewayMetadata,
+	replyMetadata,
+	summarizeGateway,
+} from "./gateway.ts";
 import { SYSTEM_PROMPT } from "./prompt.ts";
 import type { AgentStore, DraftRecord } from "./store.ts";
 import {
@@ -21,11 +33,27 @@ import { LOOKUPS } from "./versions.ts";
 type Message = OpenAI.ChatCompletionMessageParam;
 
 export interface ModelReply {
+	/** The model that answered (resolved by Nicrron). */
 	model: string;
 	content: string | null;
 	toolCalls: { id: string; name: string; arguments: string }[];
 	tokensIn?: number;
 	tokensOut?: number;
+	// ── Gateway details (Nicrron) ──
+	/** The model asked for: first in the `models` list, or a nicrron/* preset. */
+	requestedModel?: string;
+	/** Answered by a model further down the fallback list. */
+	fallback?: boolean;
+	/** Served from Nicrron's exact cache (`X-Nicrron-Cache: HIT`). */
+	cacheHit?: boolean;
+	/** Round trip to the gateway, excluding the cost lookup. */
+	latencyMs?: number;
+	/** USD Nicrron settled for this call, as a decimal string. */
+	costUsd?: string;
+	/** Nicrron's completion id (`gen-...`, also the `x-request-id` header). */
+	requestId?: string;
+	/** Provider prompt-cache reads Nicrron passes through (`usage.cache_read_tokens`). */
+	promptCacheReadTokens?: number;
 }
 
 /** One chat-completion round trip with tools. Swappable in tests. */
@@ -34,18 +62,48 @@ export type ChatModel = (
 	tools: OpenAI.ChatCompletionTool[],
 ) => Promise<ModelReply>;
 
-export function nicrronChatModel(client: OpenAI, model: string): ChatModel {
+export interface NicrronModelOptions {
+	/** Primary model or nicrron/* routing preset. */
+	model: string;
+	/** Ordered fallbacks, sent as Nicrron's `models` array after the primary. */
+	fallbacks?: readonly string[];
+	/** Look up what Nicrron charged per call. Default true. */
+	lookupCost?: boolean;
+	/** For the cost lookup; tests pass a fake. */
+	fetchImpl?: typeof fetch;
+}
+
+export function nicrronChatModel(
+	client: OpenAI,
+	options: NicrronModelOptions,
+): ChatModel {
+	const { model } = options;
+	const models = fallbackList(model, options.fallbacks ?? []);
 	return async (messages, tools) => {
-		const res = await client.chat.completions.create({
-			model,
-			messages,
-			tools,
-			tool_choice: "auto",
-			temperature: 0,
-		});
+		const t0 = performance.now();
+		const { data: res, response } = await client.chat.completions
+			.create({
+				model,
+				// Nicrron extension, not in the OpenAI types: cascade on 429/5xx.
+				...(models.length > 1 ? { models } : {}),
+				messages,
+				tools,
+				tool_choice: "auto",
+				temperature: 0,
+			} as OpenAI.ChatCompletionCreateParamsNonStreaming)
+			.withResponse();
+		const latencyMs = performance.now() - t0;
+		const resolved = res.model || model;
+		const costUsd =
+			options.lookupCost === false || !res.id
+				? undefined
+				: await generationCost(client, res.id, options.fetchImpl);
+		const usage = res.usage as
+			| (OpenAI.CompletionUsage & { cache_read_tokens?: number })
+			| undefined;
 		const message = res.choices[0]?.message;
 		return {
-			model: res.model || model,
+			model: resolved,
 			content: message?.content ?? null,
 			toolCalls: (message?.tool_calls ?? [])
 				.filter((c) => c.type === "function")
@@ -54,8 +112,19 @@ export function nicrronChatModel(client: OpenAI, model: string): ChatModel {
 					name: c.function.name,
 					arguments: c.function.arguments,
 				})),
-			tokensIn: res.usage?.prompt_tokens,
-			tokensOut: res.usage?.completion_tokens,
+			tokensIn: usage?.prompt_tokens,
+			tokensOut: usage?.completion_tokens,
+			requestedModel: model,
+			// With a preset the gateway chooses the model, so only a concrete
+			// primary can be said to have fallen back.
+			fallback: !isRoutingPreset(model) && resolved !== model,
+			cacheHit: response.headers.get(CACHE_HEADER)?.toUpperCase() === "HIT",
+			latencyMs,
+			...(costUsd !== undefined ? { costUsd } : {}),
+			...(res.id ? { requestId: res.id } : {}),
+			...(usage?.cache_read_tokens !== undefined
+				? { promptCacheReadTokens: usage.cache_read_tokens }
+				: {}),
 		};
 	};
 }
@@ -116,6 +185,8 @@ export interface RunResult {
 	total: Money;
 	draft: DraftRecord | null;
 	prismTraceId: string;
+	/** What the Nicrron gateway did: models used, fallbacks, cache hits, cost. */
+	gateway: GatewaySummary;
 }
 
 const MAX_NUDGES = 2;
@@ -152,6 +223,7 @@ export async function runAgent(
 	let explanation: string | null = null;
 	let error: { code: RunErrorCode; message: string } | undefined;
 	const toolCalls: ToolCallSummary[] = [];
+	const replies: ModelReply[] = [];
 	let nudges = 0;
 
 	try {
@@ -172,8 +244,10 @@ export async function runAgent(
 					tokensIn: r.tokensIn,
 					tokensOut: r.tokensOut,
 					toolCalls: r.toolCalls.length > 0,
+					metadata: replyMetadata(r),
 				}),
 			);
+			replies.push(reply);
 			model = reply.model;
 			messages.push({
 				role: "assistant",
@@ -281,6 +355,7 @@ export async function runAgent(
 		total,
 		draft,
 		prismTraceId: tracer.traceId,
+		gateway: summarizeGateway(deps.modelName, replies),
 	};
 
 	try {
@@ -296,11 +371,12 @@ export async function runAgent(
 			draft,
 		});
 	} finally {
-		await tracer.finish(
-			error
+		await tracer.finish({
+			...(error
 				? { error: `${error.code}: ${error.message}` }
-				: { output: explanation ?? undefined },
-		);
+				: { output: explanation ?? undefined }),
+			metadata: gatewayMetadata(result.gateway),
+		});
 	}
 	return result;
 }

@@ -237,6 +237,134 @@ describe("runAgent", () => {
 		]);
 	});
 
+	it("summarises the gateway (fallbacks, cache hits, cost) on the result and in PRISM", async () => {
+		const { store } = memoryStore();
+		const gw = {
+			requestedModel: "anthropic/claude-sonnet-5-5",
+			cacheHit: false,
+			fallback: false,
+		};
+		const { model } = scripted([
+			{
+				...gw,
+				model: "anthropic/claude-sonnet-5-5",
+				toolCalls: allChecks("inv-variant"),
+				costUsd: "0.0021",
+				requestId: "gen-1",
+			},
+			{
+				...gw,
+				// Primary was rate-limited; Nicrron cascaded down the models list.
+				model: "openai/gpt-6-sol",
+				fallback: true,
+				content: "Could not price the lines.",
+				costUsd: "0.0009",
+				requestId: "gen-2",
+			},
+		]);
+		const posts: { url: string; body: Record<string, unknown> }[] = [];
+		const fetchImpl = (async (
+			url: string | URL | Request,
+			init?: RequestInit,
+		) => {
+			posts.push({ url: String(url), body: JSON.parse(String(init?.body)) });
+			return new Response("{}", { status: 200 });
+		}) as typeof fetch;
+
+		const result = await runAgent(
+			{ invoiceId: "inv-variant", version: "v1" },
+			{
+				...deps(store, model),
+				modelName: "anthropic/claude-sonnet-5-5",
+				tracerFor: (runId: string) =>
+					new RunTracer(
+						{ apiKey: "k", projectId: "p", host: "https://prism.example" },
+						{ sessionId: runId, name: "t", agentName: "t" },
+						fetchImpl,
+					),
+			},
+		);
+
+		expect(result.model).toBe("openai/gpt-6-sol");
+		expect(result.gateway).toEqual({
+			requestedModel: "anthropic/claude-sonnet-5-5",
+			modelCalls: 2,
+			modelsUsed: ["anthropic/claude-sonnet-5-5", "openai/gpt-6-sol"],
+			fallbacks: 1,
+			cacheHits: 0,
+			costUsd: "0.003",
+		});
+
+		const ingest = posts.find((p) => p.url.endsWith("/api/spans/ingest"));
+		const spans = (ingest?.body.spans ?? []) as {
+			span_type: string;
+			model: string | null;
+			metadata: unknown;
+		}[];
+		const llm = spans.filter((s) => s.span_type === "llm");
+		expect(llm.map((s) => s.model)).toEqual([
+			"anthropic/claude-sonnet-5-5",
+			"openai/gpt-6-sol",
+		]);
+		expect(llm[1]?.metadata).toMatchObject({
+			requested_model: "anthropic/claude-sonnet-5-5",
+			resolved_model: "openai/gpt-6-sol",
+			fallback_used: true,
+			cache_hit: false,
+			cost_usd: "0.0009",
+			nicrron_request_id: "gen-2",
+		});
+		expect(spans[0]?.metadata).toMatchObject({
+			gateway: "nicrron",
+			models_used: ["anthropic/claude-sonnet-5-5", "openai/gpt-6-sol"],
+			fallbacks: 1,
+			cache_hits: 0,
+			cost_usd: "0.003",
+			tool_calls: 6,
+		});
+
+		// The batch runner's contract still parses a response carrying `gateway`.
+		expect(() =>
+			RunResponse.parse(JSON.parse(JSON.stringify(result))),
+		).not.toThrow();
+	});
+
+	it("counts cache hits across a repeated run and drops cost when a call has none", async () => {
+		const { store } = memoryStore();
+		const { model } = scripted([
+			{ toolCalls: allChecks("inv-variant"), cacheHit: true, costUsd: "0" },
+			{ content: "Could not price the lines.", cacheHit: true },
+		]);
+		const result = await runAgent(
+			{ invoiceId: "inv-variant", version: "v1" },
+			deps(store, model),
+		);
+		expect(result.gateway).toMatchObject({
+			modelCalls: 2,
+			cacheHits: 2,
+			fallbacks: 0,
+			modelsUsed: ["test/model"],
+		});
+		expect(result.gateway).not.toHaveProperty("costUsd");
+	});
+
+	it("reports an empty gateway summary when the model never answers", async () => {
+		const { store } = memoryStore();
+		const result = await runAgent(
+			{ invoiceId: "inv-clean", version: "v1" },
+			deps(store, async () => {
+				throw new Error("503 all fallbacks exhausted");
+			}),
+		);
+		expect(result.gateway).toEqual({
+			requestedModel: "test/model",
+			modelCalls: 0,
+			modelsUsed: [],
+			fallbacks: 0,
+			cacheHits: 0,
+		});
+	});
+
 	it("v2 resolves the vendor variant and pack unit, and finds the $72 overcharge", async () => {
 		const { store } = memoryStore();
 		const { model } = scripted([

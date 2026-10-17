@@ -156,6 +156,8 @@ export interface ModelCallUsage {
 	tokensOut?: number;
 	/** True when the model asked for tools rather than answering. */
 	toolCalls?: boolean;
+	/** Extra `llm` span metadata, e.g. gateway fallback, cache hit and cost. */
+	metadata?: Record<string, unknown>;
 }
 
 const MAX_TEXT = 10_000;
@@ -299,7 +301,7 @@ export class RunTracer {
 			span_type: "llm",
 			input_text: asText(input),
 			output_text: asText(info.output ?? errorMessage),
-			metadata: { iteration: this.steps.length + 1 },
+			metadata: { ...info.metadata, iteration: this.steps.length + 1 },
 			start_time: startTime,
 			end_time: new Date().toISOString(),
 			duration_ms: durationMs,
@@ -331,10 +333,16 @@ export class RunTracer {
 
 	/**
 	 * Flush to PRISM. Call once, after the run (also on failure, with
-	 * `error`). Awaited so a Worker isn't frozen mid-POST; never throws.
+	 * `error`). `metadata` is added to the root span (e.g. a gateway summary
+	 * only known at the end). Awaited so a Worker isn't frozen mid-POST; never
+	 * throws.
 	 */
 	async finish(
-		result: { output?: unknown; error?: unknown } = {},
+		result: {
+			output?: unknown;
+			error?: unknown;
+			metadata?: Record<string, unknown>;
+		} = {},
 	): Promise<void> {
 		if (this.finished) return;
 		this.finished = true;
@@ -356,6 +364,7 @@ export class RunTracer {
 			output_text: asText(result.output ?? runError),
 			metadata: {
 				...metadata,
+				...result.metadata,
 				tool_calls: this.steps.filter((s) => s.tool_name).length,
 			},
 			start_time: this.startedAt,
