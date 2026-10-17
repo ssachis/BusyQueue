@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as ImportDocumentRouteImport } from './routes/import-document'
+import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as ProjectionsRouteImport } from './routes/projections'
 import { Route as RemindersRouteImport } from './routes/reminders'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -32,6 +33,7 @@ import { Route as DocumentsIdRouteImport } from './routes/documents/$id'
 import { Route as DocumentsNewRouteImport } from './routes/documents/new'
 import { Route as PrintIdRouteImport } from './routes/print.$id'
 import { Route as SettingsBusinessRouteImport } from './routes/settings/business'
+import { Route as ApiImportsImportIdFileRouteImport } from './routes/api/imports.$importId.file'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +48,11 @@ const ImportRoute = ImportRouteImport.update({
 const ImportDocumentRoute = ImportDocumentRouteImport.update({
   id: '/import-document',
   path: '/import-document',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InboxRoute = InboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectionsRoute = ProjectionsRouteImport.update({
@@ -148,16 +155,22 @@ const SettingsBusinessRoute = SettingsBusinessRouteImport.update({
   path: '/settings/business',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiImportsImportIdFileRoute = ApiImportsImportIdFileRouteImport.update({
+  id: '/$importId/file',
+  path: '/$importId/file',
+  getParentRoute: () => ApiImportsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
   '/import-document': typeof ImportDocumentRoute
+  '/inbox': typeof InboxRoute
   '/projections': typeof ProjectionsRoute
   '/reminders': typeof RemindersRoute
   '/api/chat': typeof ApiChatRoute
   '/api/document-imports': typeof ApiDocumentImportsRoute
-  '/api/imports': typeof ApiImportsRoute
+  '/api/imports': typeof ApiImportsRouteWithChildren
   '/api/runs': typeof ApiRunsRoute
   '/catalog/$id': typeof CatalogIdRoute
   '/catalog/new': typeof CatalogNewRoute
@@ -173,16 +186,18 @@ export interface FileRoutesByFullPath {
   '/clients/': typeof ClientsIndexRoute
   '/contracts/': typeof ContractsIndexRoute
   '/documents/': typeof DocumentsIndexRoute
+  '/api/imports/$importId/file': typeof ApiImportsImportIdFileRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
   '/import-document': typeof ImportDocumentRoute
+  '/inbox': typeof InboxRoute
   '/projections': typeof ProjectionsRoute
   '/reminders': typeof RemindersRoute
   '/api/chat': typeof ApiChatRoute
   '/api/document-imports': typeof ApiDocumentImportsRoute
-  '/api/imports': typeof ApiImportsRoute
+  '/api/imports': typeof ApiImportsRouteWithChildren
   '/api/runs': typeof ApiRunsRoute
   '/catalog/$id': typeof CatalogIdRoute
   '/catalog/new': typeof CatalogNewRoute
@@ -198,17 +213,19 @@ export interface FileRoutesByTo {
   '/clients': typeof ClientsIndexRoute
   '/contracts': typeof ContractsIndexRoute
   '/documents': typeof DocumentsIndexRoute
+  '/api/imports/$importId/file': typeof ApiImportsImportIdFileRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
   '/import-document': typeof ImportDocumentRoute
+  '/inbox': typeof InboxRoute
   '/projections': typeof ProjectionsRoute
   '/reminders': typeof RemindersRoute
   '/api/chat': typeof ApiChatRoute
   '/api/document-imports': typeof ApiDocumentImportsRoute
-  '/api/imports': typeof ApiImportsRoute
+  '/api/imports': typeof ApiImportsRouteWithChildren
   '/api/runs': typeof ApiRunsRoute
   '/catalog/$id': typeof CatalogIdRoute
   '/catalog/new': typeof CatalogNewRoute
@@ -224,6 +241,7 @@ export interface FileRoutesById {
   '/clients/': typeof ClientsIndexRoute
   '/contracts/': typeof ContractsIndexRoute
   '/documents/': typeof DocumentsIndexRoute
+  '/api/imports/$importId/file': typeof ApiImportsImportIdFileRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -231,6 +249,7 @@ export interface FileRouteTypes {
     | '/'
     | '/import'
     | '/import-document'
+    | '/inbox'
     | '/projections'
     | '/reminders'
     | '/api/chat'
@@ -251,11 +270,13 @@ export interface FileRouteTypes {
     | '/clients/'
     | '/contracts/'
     | '/documents/'
+    | '/api/imports/$importId/file'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/import'
     | '/import-document'
+    | '/inbox'
     | '/projections'
     | '/reminders'
     | '/api/chat'
@@ -276,11 +297,13 @@ export interface FileRouteTypes {
     | '/clients'
     | '/contracts'
     | '/documents'
+    | '/api/imports/$importId/file'
   id:
     | '__root__'
     | '/'
     | '/import'
     | '/import-document'
+    | '/inbox'
     | '/projections'
     | '/reminders'
     | '/api/chat'
@@ -301,17 +324,19 @@ export interface FileRouteTypes {
     | '/clients/'
     | '/contracts/'
     | '/documents/'
+    | '/api/imports/$importId/file'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ImportRoute: typeof ImportRoute
   ImportDocumentRoute: typeof ImportDocumentRoute
+  InboxRoute: typeof InboxRoute
   ProjectionsRoute: typeof ProjectionsRoute
   RemindersRoute: typeof RemindersRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiDocumentImportsRoute: typeof ApiDocumentImportsRoute
-  ApiImportsRoute: typeof ApiImportsRoute
+  ApiImportsRoute: typeof ApiImportsRouteWithChildren
   ApiRunsRoute: typeof ApiRunsRoute
   CatalogIdRoute: typeof CatalogIdRoute
   CatalogNewRoute: typeof CatalogNewRoute
@@ -350,6 +375,13 @@ declare module '@tanstack/react-router' {
       path: '/import-document'
       fullPath: '/import-document'
       preLoaderRoute: typeof ImportDocumentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inbox': {
+      id: '/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof InboxRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projections': {
@@ -492,18 +524,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsBusinessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/imports/$importId/file': {
+      id: '/api/imports/$importId/file'
+      path: '/$importId/file'
+      fullPath: '/api/imports/$importId/file'
+      preLoaderRoute: typeof ApiImportsImportIdFileRouteImport
+      parentRoute: typeof ApiImportsRoute
+    }
   }
 }
+
+interface ApiImportsRouteChildren {
+  ApiImportsImportIdFileRoute: typeof ApiImportsImportIdFileRoute
+}
+
+const ApiImportsRouteChildren: ApiImportsRouteChildren = {
+  ApiImportsImportIdFileRoute: ApiImportsImportIdFileRoute,
+}
+
+const ApiImportsRouteWithChildren = ApiImportsRoute._addFileChildren(
+  ApiImportsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ImportRoute: ImportRoute,
   ImportDocumentRoute: ImportDocumentRoute,
+  InboxRoute: InboxRoute,
   ProjectionsRoute: ProjectionsRoute,
   RemindersRoute: RemindersRoute,
   ApiChatRoute: ApiChatRoute,
   ApiDocumentImportsRoute: ApiDocumentImportsRoute,
-  ApiImportsRoute: ApiImportsRoute,
+  ApiImportsRoute: ApiImportsRouteWithChildren,
   ApiRunsRoute: ApiRunsRoute,
   CatalogIdRoute: CatalogIdRoute,
   CatalogNewRoute: CatalogNewRoute,

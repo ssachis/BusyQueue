@@ -27,6 +27,18 @@ export interface ImportErrorResponse {
 	prismTraceId?: string;
 }
 
+/** An earlier import reopened on /import?id=… (e.g. from the inbox). */
+export interface StoredImport {
+	importId: string;
+	status: "uploaded" | "extracted" | "failed" | "saved";
+	/** The review state; null until the document has been read. */
+	result: ImportResponse | null;
+	error: string | null;
+	saved: SavedImport | null;
+	/** Same-origin URL of the stored document, for the preview. */
+	fileUrl: string;
+}
+
 export interface SavedImport {
 	invoiceId: string;
 	corrected: string[];

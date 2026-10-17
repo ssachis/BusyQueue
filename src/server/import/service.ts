@@ -20,6 +20,7 @@ import type {
 	ImportResponse,
 	ImportRunSummary,
 	SavedImport,
+	StoredImport,
 } from "#/lib/import/api.ts";
 import {
 	correctedPaths,
@@ -27,6 +28,7 @@ import {
 	type ImportDraft,
 	MAX_UPLOAD_BYTES,
 	sniffContentType,
+	validateDraft,
 } from "#/lib/import/extraction.ts";
 import { executeRun } from "#/server/agent/execute.ts";
 import { prismConfig } from "#/server/agent/tracing.ts";
@@ -54,7 +56,20 @@ const safeName = (name: string) =>
 		.replace(/^-+|-+$/g, "")
 		.slice(-80) || "upload";
 
-export async function importUpload(file: File): Promise<UploadOutcome> {
+export interface ImportOptions {
+	/**
+	 * PRISM session to join (default: the import id). The forwarding inbox
+	 * passes its email's session so one email is one session.
+	 */
+	sessionId?: string;
+	/** Where the file came from, on the root span (default "upload"). */
+	source?: "upload" | "inbox";
+}
+
+export async function importUpload(
+	file: File,
+	options: ImportOptions = {},
+): Promise<UploadOutcome> {
 	if (file.size === 0) {
 		return { ok: false, status: 400, body: { error: "The file is empty." } };
 	}
@@ -86,12 +101,13 @@ export async function importUpload(file: File): Promise<UploadOutcome> {
 		pdf: env.IMPORT_PDF_MODELS,
 	});
 	const tracer = new RunTracer(prismConfig(env), {
-		sessionId: id,
+		sessionId: options.sessionId ?? id,
 		name: "busyq_invoice_import",
 		agentName: IMPORT_AGENT_NAME,
 		input: { importId: id, filename, contentType: type, sizeBytes: file.size },
 		metadata: {
 			import_id: id,
+			source: options.source ?? "upload",
 			content_type: type,
 			requested_models: models.join(","),
 		},
@@ -204,6 +220,81 @@ export async function importUpload(file: File): Promise<UploadOutcome> {
 }
 
 export class ImportError extends Error {}
+
+/**
+ * An earlier import, reopened for review on /import?id=… (the inbox links
+ * here). The model's notes aren't stored, so they come back empty.
+ */
+export async function loadImport(
+	importId: string,
+): Promise<StoredImport | null> {
+	const db = getDb();
+	const [row] = await db
+		.select()
+		.from(invoiceImports)
+		.where(eq(invoiceImports.id, importId));
+	if (!row) return null;
+	const draft = row.extracted;
+	const existing = draft?.invoiceNumber
+		? await db
+				.select({ id: invoices.id, vendor: invoices.vendorName })
+				.from(invoices)
+				.where(eq(invoices.invoiceNumber, draft.invoiceNumber))
+		: [];
+	return {
+		importId: row.id,
+		status: row.status,
+		error: row.error,
+		fileUrl: `/api/imports/${row.id}/file`,
+		saved:
+			row.status === "saved" && row.invoiceId
+				? {
+						invoiceId: row.invoiceId,
+						corrected: [],
+						prismTraceId: row.prismTraceId ?? "",
+					}
+				: null,
+		result: draft
+			? {
+					importId: row.id,
+					filename: row.filename,
+					contentType: row.contentType,
+					draft,
+					uncertain: row.uncertain,
+					issues: validateDraft(draft),
+					notes: null,
+					requestedModel: row.requestedModel ?? row.model ?? "",
+					model: row.model ?? "",
+					fallbackUsed: !!row.model && row.model !== row.requestedModel,
+					prismTraceId: row.prismTraceId ?? "",
+					// The saved copy itself isn't "already on file".
+					existing: existing.filter((e) => e.id !== row.invoiceId),
+				}
+			: null,
+	};
+}
+
+/** The stored document for an import, for the review preview. */
+export async function importFile(importId: string): Promise<Response | null> {
+	const db = getDb();
+	const [row] = await db
+		.select({
+			r2Key: invoiceImports.r2Key,
+			contentType: invoiceImports.contentType,
+		})
+		.from(invoiceImports)
+		.where(eq(invoiceImports.id, importId));
+	if (!row) return null;
+	const object = await workerEnv.UPLOADS.get(row.r2Key);
+	if (!object) return null;
+	return new Response(object.body, {
+		headers: {
+			"Content-Type": row.contentType,
+			"Cache-Control": "private, max-age=300",
+			"X-Content-Type-Options": "nosniff",
+		},
+	});
+}
 
 /** Save the reviewed draft as a new invoice. Saving twice returns the first invoice. */
 export async function saveImportedInvoice(input: {

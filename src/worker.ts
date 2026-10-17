@@ -8,10 +8,15 @@
  *
  * - `scheduled`: the daily cron (`triggers.crons` in wrangler.jsonc) runs the
  *   reminder sweep for the cron's UTC date.
+ * - `email`: the forwarding inbox. Email Routing sends mail for the inbox
+ *   address (INBOX_ADDRESS) here; it is recorded, classified and vendor
+ *   bills are read by the AI import (src/server/inbox/). Locally:
+ *   POST /cdn-cgi/handler/email?from=…&to=… with the raw .eml as the body.
  *
  * Queue consumers (AI import, Phase 2) can be added here the same way.
  */
 import startEntry from "@tanstack/react-start/server-entry";
+import { handleInboundEmail } from "#/server/inbox/handler.ts";
 import { runReminderSweep, todayIso } from "#/server/reminders-store.ts";
 
 export default {
@@ -30,5 +35,13 @@ export default {
 			// Rethrow so the invocation is marked failed in Workers observability.
 			throw error;
 		}
+	},
+
+	async email(
+		message: ForwardableEmailMessage,
+		_env: unknown,
+		ctx: ExecutionContext,
+	) {
+		await handleInboundEmail(message, ctx);
 	},
 };

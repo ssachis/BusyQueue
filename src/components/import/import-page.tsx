@@ -16,6 +16,7 @@ import type {
 	ImportErrorResponse,
 	ImportResponse,
 	SavedImport,
+	StoredImport,
 } from "#/lib/import/api.ts";
 import {
 	type ImportDraft,
@@ -33,18 +34,42 @@ interface Preview {
 	name: string;
 }
 
-export function ImportPage() {
+export function ImportPage({ stored }: { stored?: StoredImport | null }) {
 	const [reading, setReading] = useState(false);
-	const [error, setError] = useState<ImportErrorResponse | null>(null);
-	const [preview, setPreview] = useState<Preview | null>(null);
-	const [result, setResult] = useState<ImportResponse | null>(null);
-	const [draft, setDraft] = useState<ImportDraft | null>(null);
-	const [uncertain, setUncertain] = useState<Set<string>>(new Set());
+	const [error, setError] = useState<ImportErrorResponse | null>(() =>
+		stored && !stored.result
+			? {
+					error: stored.error ?? "This document has not been read yet.",
+					importId: stored.importId,
+				}
+			: null,
+	);
+	const [preview, setPreview] = useState<Preview | null>(() =>
+		stored?.result
+			? {
+					url: stored.fileUrl,
+					type: stored.result.contentType,
+					name: stored.result.filename,
+				}
+			: null,
+	);
+	const [result, setResult] = useState<ImportResponse | null>(
+		stored?.result ?? null,
+	);
+	const [draft, setDraft] = useState<ImportDraft | null>(
+		stored?.result?.draft ?? null,
+	);
+	const [uncertain, setUncertain] = useState<Set<string>>(
+		() => new Set(stored?.saved ? [] : (stored?.result?.uncertain ?? [])),
+	);
 	const [saving, setSaving] = useState(false);
-	const [saved, setSaved] = useState<SavedImport | null>(null);
+	const [saved, setSaved] = useState<SavedImport | null>(stored?.saved ?? null);
 
 	useEffect(
-		() => () => (preview ? URL.revokeObjectURL(preview.url) : undefined),
+		() => () =>
+			preview?.url.startsWith("blob:")
+				? URL.revokeObjectURL(preview.url)
+				: undefined,
 		[preview],
 	);
 

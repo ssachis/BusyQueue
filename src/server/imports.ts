@@ -3,7 +3,16 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { AgentVersion } from "#/lib/busyq/types.ts";
 import { ImportDraft } from "#/lib/import/extraction.ts";
-import { runAgentOnImport, saveImportedInvoice } from "./import/service.ts";
+import {
+	loadImport,
+	runAgentOnImport,
+	saveImportedInvoice,
+} from "./import/service.ts";
+
+/** Reopen an earlier import for review (/import?id=…). */
+export const getImport = createServerFn({ method: "GET" })
+	.validator((input: unknown) => z.object({ importId: z.uuid() }).parse(input))
+	.handler(({ data }) => loadImport(data.importId));
 
 export const saveImport = createServerFn({ method: "POST" })
 	.validator((input: unknown) =>

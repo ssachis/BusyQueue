@@ -1,0 +1,57 @@
+Return-Path: <billing@ridgelinefreight.com>
+From: "Ridgeline Freight Billing" <billing@ridgelinefreight.com>
+To: Accounts Payable <invoices@in.buddhsentripathi.com>
+Subject: =?UTF-8?Q?Invoice_RFL-20417_=E2=80=93_PRO_7731045?=
+Date: Wed, 02 Sep 2026 09:15:00 -0500
+Message-ID: <rfl-20417.20260902@mail.ridgelinefreight.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mixed-boundary"
+
+--mixed-boundary
+Content-Type: multipart/related; boundary="related-boundary"
+
+--related-boundary
+Content-Type: multipart/alternative; boundary="alt-boundary"
+
+--alt-boundary
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hello,
+
+Please find attached invoice RFL-20417 for the LTL shipment delivered to the C=
+olumbus cross-dock.
+
+Questions? Call Dana at (815) 555-0187 or write to dana.ortiz@ridgelinefreight.com.
+Ridgeline Freight Lines, 4100 Rail Yard Road, Suite 4, Joliet
+
+--alt-boundary
+Content-Type: text/html; charset="utf-8"
+
+<p>Hello,</p><p>Please find attached invoice RFL-20417.</p><img src="cid:logo@ridgelinefreight">
+--alt-boundary--
+
+--related-boundary
+Content-Type: image/png
+Content-Transfer-Encoding: base64
+Content-ID: <logo@ridgelinefreight>
+Content-Disposition: inline
+
+iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==
+--related-boundary--
+
+--mixed-boundary
+Content-Type: application/octet-stream; name="Invoice_RFL-20417.pdf"
+Content-Disposition: attachment; filename="Invoice_RFL-20417.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKMSAwIG9iaiA8PCAvVHlwZSAvQ2F0YWxvZyA+PiBlbmRvYmoKdHJhaWxlciA8PCAv
+Um9vdCAxIDAgUiA+PgolJUVPRgo=
+
+--mixed-boundary
+Content-Type: text/plain; name="delivery-notes.txt"
+Content-Disposition: attachment; filename="delivery-notes.txt"
+Content-Transfer-Encoding: base64
+
+RGVsaXZlcnkgd2luZG93OiBUdWUvVGh1IDYtOGFtCg==
+--mixed-boundary--
