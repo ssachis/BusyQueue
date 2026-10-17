@@ -1,11 +1,14 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Wordmark } from "#/components/logo.tsx";
+import { RemindersBadge } from "#/components/reminders/reminders-badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
-import { mainNav } from "#/config/nav.ts";
+import { type NavItem, navSections } from "#/config/nav.ts";
 import { siteConfig } from "#/config/site.ts";
 import { cn } from "#/lib/utils.ts";
+import { getBusiness } from "#/server/business.ts";
 
 function Brand() {
 	return (
@@ -19,23 +22,54 @@ function Brand() {
 	);
 }
 
+/** The business name from its profile (blank until it loads). */
+function BusinessName({ className }: { className?: string }) {
+	const { data } = useQuery({
+		queryKey: ["business", "profile"],
+		queryFn: () => getBusiness(),
+		staleTime: 5 * 60_000,
+	});
+	return (
+		<p
+			className={cn("truncate text-sm text-sidebar-foreground/60", className)}
+			title={data?.legalName}
+		>
+			{data?.legalName ?? "\u00a0"}
+		</p>
+	);
+}
+
+function NavBadge({ badge }: { badge: NavItem["badge"] }) {
+	if (badge === "reminders") return <RemindersBadge className="ml-auto" />;
+	return null;
+}
+
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 	return (
-		<nav className="flex flex-col gap-1">
-			{mainNav.map(({ to, label, icon: Icon, exact }) => (
-				<Link
-					key={to}
-					to={to}
-					activeOptions={{ exact }}
-					onClick={onNavigate}
-					className="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-[15px] text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-					activeProps={{
-						className: "bg-sidebar-primary/10 font-medium text-sidebar-primary",
-					}}
-				>
-					<Icon className="size-[18px] shrink-0" />
-					{label}
-				</Link>
+		<nav aria-label="Main" className="flex flex-col gap-5">
+			{navSections.map((section) => (
+				<div key={section.label} className="flex flex-col gap-0.5">
+					<h2 className="px-3 pb-1 text-[11px] font-medium tracking-wider text-sidebar-foreground/45 uppercase">
+						{section.label}
+					</h2>
+					{section.items.map(({ to, label, icon: Icon, exact, badge }) => (
+						<Link
+							key={to}
+							to={to}
+							activeOptions={{ exact, includeSearch: false }}
+							onClick={onNavigate}
+							className="group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring data-[status=active]:bg-sidebar-primary/10 data-[status=active]:font-medium data-[status=active]:text-sidebar-primary"
+						>
+							<span
+								aria-hidden
+								className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-sidebar-primary opacity-0 transition-opacity group-data-[status=active]:opacity-100"
+							/>
+							<Icon className="size-[18px] shrink-0" />
+							<span className="truncate">{label}</span>
+							<NavBadge badge={badge} />
+						</Link>
+					))}
+				</div>
 			))}
 		</nav>
 	);
@@ -49,13 +83,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 		<div className="flex min-h-screen flex-col md:flex-row">
 			{/* Desktop sidebar */}
 			<aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
-				<div className="relative px-6 pt-8 pb-8">
+				<div className="relative px-6 pt-7 pb-6">
 					<Brand />
-					<p className="mt-2 text-sm text-sidebar-foreground/50">
-						Northfield Unified
-					</p>
+					<BusinessName className="mt-2" />
 				</div>
-				<div className="relative flex-1 px-3 py-2">
+				<div className="relative flex-1 overflow-y-auto px-3 pb-4">
 					<NavLinks />
 				</div>
 				<div className="relative flex items-center justify-between px-5 py-5">
@@ -100,7 +132,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 						open ? "translate-x-0" : "-translate-x-full",
 					)}
 				>
-					<div className="flex items-center justify-between px-5 py-5">
+					<div className="flex items-center justify-between px-5 pt-5 pb-2">
 						<Brand />
 						<Button
 							variant="ghost"
@@ -111,7 +143,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 							<X />
 						</Button>
 					</div>
-					<div className="flex-1 px-3">
+					<BusinessName className="px-5 pb-4" />
+					<div className="flex-1 overflow-y-auto px-3 pb-6">
 						<NavLinks onNavigate={() => setOpen(false)} />
 					</div>
 				</div>

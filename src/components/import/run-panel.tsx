@@ -125,8 +125,8 @@ export function RunPanel({ saved }: { saved: SavedImport }) {
 						<div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
 							<span>PRISM trace {r.prismTraceId}</span>
 							<Link
-								to="/"
-								search={{ v: r.version, invoice: r.invoiceId }}
+								to="/review"
+								search={{ invoice: r.invoiceId }}
 								className="inline-flex items-center gap-1 text-sm text-primary underline-offset-4 hover:underline"
 							>
 								Open in review

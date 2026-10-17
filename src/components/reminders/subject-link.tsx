@@ -9,7 +9,7 @@ export function subjectHref(type: SubjectType, id: string): string {
 		case "contract":
 			return `/contracts/${enc}`;
 		case "vendor_bill":
-			return `/?v=v2&invoice=${enc}`;
+			return `/review?invoice=${enc}`;
 		case "document":
 			return `/documents/${enc}`;
 	}
@@ -40,7 +40,7 @@ export function SubjectLink({
 			);
 		case "vendor_bill":
 			return (
-				<Link to="/" search={{ v: "v2", invoice: id }} className={className}>
+				<Link to="/review" search={{ invoice: id }} className={className}>
 					{children}
 				</Link>
 			);

@@ -203,8 +203,8 @@ function PriceRiseRow({
 			<td className="px-3 py-2">
 				{invoiceId ? (
 					<Link
-						to="/"
-						search={{ v: "v2", invoice: invoiceId }}
+						to="/review"
+						search={{ invoice: invoiceId }}
 						className="text-primary underline-offset-4 hover:underline"
 					>
 						{labels[invoiceId]?.label ?? invoiceId}

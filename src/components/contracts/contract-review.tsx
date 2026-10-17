@@ -169,7 +169,7 @@ export function ContractReview({ review }: { review: Review }) {
 				</Button>
 				{confirmed ? (
 					<Button asChild size="sm">
-						<Link to="/" search={{ v: "v2" }}>
+						<Link to="/review">
 							<Play />
 							Audit invoices
 						</Link>
