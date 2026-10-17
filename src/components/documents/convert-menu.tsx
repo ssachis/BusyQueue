@@ -11,9 +11,7 @@ import { toast } from "sonner";
 import { Button } from "#/components/ui/button.tsx";
 import { conversionTargets } from "#/lib/documents/conversion.ts";
 import type { DocumentStatus, DocumentType } from "#/lib/documents/types.ts";
-import {
-	convertDocumentTo,
-} from "#/server/documents/convert.ts";
+import { convertDocumentTo } from "#/server/documents/convert.ts";
 import { duplicateDocumentAsDraft } from "#/server/documents/duplicate.ts";
 import { TYPE_LABEL } from "./preview/format.ts";
 
@@ -57,7 +55,9 @@ export function ConvertMenu({ documentId, type, status }: ConvertMenuProps) {
 					disabled={busy !== null}
 					onClick={() =>
 						run(to, () =>
-							convertDocumentTo({ data: { documentId, to, date: localToday() } }),
+							convertDocumentTo({
+								data: { documentId, to, date: localToday() },
+							}),
 						)
 					}
 				>
@@ -70,7 +70,9 @@ export function ConvertMenu({ documentId, type, status }: ConvertMenuProps) {
 				disabled={busy !== null}
 				onClick={() =>
 					run("duplicate", () =>
-						duplicateDocumentAsDraft({ data: { documentId, date: localToday() } }),
+						duplicateDocumentAsDraft({
+							data: { documentId, date: localToday() },
+						}),
 					)
 				}
 			>

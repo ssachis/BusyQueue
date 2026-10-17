@@ -21,29 +21,37 @@ describe("CatalogItemInput", () => {
 	});
 
 	it("keeps the price as the decimal string entered", () => {
-		expect(CatalogItemInput.parse({ ...base, unitPrice: "0.335" }).unitPrice).toBe(
-			"0.335",
-		);
+		expect(
+			CatalogItemInput.parse({ ...base, unitPrice: "0.335" }).unitPrice,
+		).toBe("0.335");
 	});
 
 	it("rejects negative, non-numeric and missing values", () => {
-		expect(CatalogItemInput.safeParse({ ...base, unitPrice: "-1" }).success).toBe(
+		expect(
+			CatalogItemInput.safeParse({ ...base, unitPrice: "-1" }).success,
+		).toBe(false);
+		expect(
+			CatalogItemInput.safeParse({ ...base, unitPrice: "abc" }).success,
+		).toBe(false);
+		expect(CatalogItemInput.safeParse({ ...base, name: "" }).success).toBe(
 			false,
 		);
-		expect(CatalogItemInput.safeParse({ ...base, unitPrice: "abc" }).success).toBe(
-			false,
-		);
-		expect(CatalogItemInput.safeParse({ ...base, name: "" }).success).toBe(false);
 		expect(CatalogItemInput.safeParse({ ...base, taxCode: "" }).success).toBe(
 			false,
 		);
-		expect(CatalogItemInput.safeParse({ ...base, rate: "x" }).success).toBe(false);
+		expect(CatalogItemInput.safeParse({ ...base, rate: "x" }).success).toBe(
+			false,
+		);
 	});
 });
 
 describe("itemToLine", () => {
 	it("fills a valid draft line and links the catalog item", () => {
-		const line = itemToLine({ id: "item-1", ...CatalogItemInput.parse(base) }, 3, "12");
+		const line = itemToLine(
+			{ id: "item-1", ...CatalogItemInput.parse(base) },
+			3,
+			"12",
+		);
 		expect(DraftLine.safeParse(line).success).toBe(true);
 		expect(line).toMatchObject({
 			lineNo: 3,

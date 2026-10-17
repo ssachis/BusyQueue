@@ -47,7 +47,10 @@ function CatalogList() {
 						className="max-w-xs"
 					/>
 					<Button asChild variant={archived ? "default" : "outline"} size="sm">
-						<Link to="/catalog" search={{ archived: archived ? undefined : true }}>
+						<Link
+							to="/catalog"
+							search={{ archived: archived ? undefined : true }}
+						>
 							Show archived
 						</Link>
 					</Button>

@@ -27,7 +27,9 @@ function NewClient() {
 							toast.success("Client added");
 							await navigate({ to: "/clients" });
 						} catch (err) {
-							toast.error(err instanceof Error ? err.message : "Could not save");
+							toast.error(
+								err instanceof Error ? err.message : "Could not save",
+							);
 						}
 					}}
 				/>

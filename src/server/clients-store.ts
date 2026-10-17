@@ -41,7 +41,9 @@ export async function getClient(id: string): Promise<ClientRow | null> {
 	const [row] = await getDb()
 		.select()
 		.from(clients)
-		.where(and(eq(clients.id, id), eq(clients.businessId, currentBusinessId())));
+		.where(
+			and(eq(clients.id, id), eq(clients.businessId, currentBusinessId())),
+		);
 	if (!row) return null;
 	const counts = await documentCounts();
 	return { ...row, documentCount: counts.get(id) ?? 0 };
@@ -70,7 +72,9 @@ export async function updateClient(id: string, input: ClientInput) {
 	await getDb()
 		.update(clients)
 		.set({ ...input, updatedAt: new Date().toISOString() })
-		.where(and(eq(clients.id, id), eq(clients.businessId, currentBusinessId())));
+		.where(
+			and(eq(clients.id, id), eq(clients.businessId, currentBusinessId())),
+		);
 }
 
 export async function setClientArchived(id: string, archived: boolean) {
@@ -78,11 +82,15 @@ export async function setClientArchived(id: string, archived: boolean) {
 	await getDb()
 		.update(clients)
 		.set({ archivedAt: archived ? at : null, updatedAt: at })
-		.where(and(eq(clients.id, id), eq(clients.businessId, currentBusinessId())));
+		.where(
+			and(eq(clients.id, id), eq(clients.businessId, currentBusinessId())),
+		);
 }
 
 /** Delete a client with no documents; archive one that has history. */
-export async function removeClient(id: string): Promise<"deleted" | "archived"> {
+export async function removeClient(
+	id: string,
+): Promise<"deleted" | "archived"> {
 	const client = await getClient(id);
 	if (!client) throw new Error("Client not found");
 	if (removalOutcome(client.documentCount) === "archive") {
@@ -91,6 +99,8 @@ export async function removeClient(id: string): Promise<"deleted" | "archived"> 
 	}
 	await getDb()
 		.delete(clients)
-		.where(and(eq(clients.id, id), eq(clients.businessId, currentBusinessId())));
+		.where(
+			and(eq(clients.id, id), eq(clients.businessId, currentBusinessId())),
+		);
 	return "deleted";
 }

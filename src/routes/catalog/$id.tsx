@@ -65,7 +65,9 @@ function EditItem() {
 							await router.invalidate();
 							toast.success("Item saved");
 						} catch (err) {
-							toast.error(err instanceof Error ? err.message : "Could not save");
+							toast.error(
+								err instanceof Error ? err.message : "Could not save",
+							);
 						}
 					}}
 				/>
