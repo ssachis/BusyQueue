@@ -1,4 +1,4 @@
-import { House, type LucideIcon } from "lucide-react";
+import { ClipboardCheck, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
 	to: string;
@@ -10,5 +10,5 @@ export interface NavItem {
 
 /** Primary navigation. Add an entry per top-level route. */
 export const mainNav: NavItem[] = [
-	{ to: "/", label: "Home", icon: House, exact: true },
+	{ to: "/", label: "Review", icon: ClipboardCheck, exact: true },
 ];
