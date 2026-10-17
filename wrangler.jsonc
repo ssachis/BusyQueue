@@ -14,8 +14,12 @@
 			"database_id": "252f3761-882d-4ad4-bbab-241eca94108a",
 			"migrations_dir": "drizzle"
 		}
-	]
-	// Add other bindings (r2_buckets, queues, ...) here, then run
+	],
+	// Private bucket for uploaded documents (AI import). `bun run dev`
+	// simulates it locally; run `wrangler r2 bucket create busyq-uploads`
+	// once before the first deploy.
+	"r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "busyq-uploads" }]
+	// Add other bindings (queues, ...) here, then run
 	// `bun run cf-typegen` to regenerate worker-configuration.d.ts.
 	// Secrets live in .dev.vars locally and `wrangler secret put` in production.
 }

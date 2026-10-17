@@ -33,6 +33,19 @@ curl -s localhost:3000/api/chat -H 'content-type: application/json' \
   -d '{"messages":[{"role":"user","content":"hello"}]}'
 ```
 
+- **AI import** (`/import`, `POST /api/imports` with a multipart `file`): a PNG, JPEG,
+  WebP or PDF of a vendor invoice (10 MB max, type checked by magic bytes) is stored
+  in R2 (`UPLOADS`), transcribed through Nicrron with a `models` fallback list, and
+  returned as an editable draft with uncertain fields flagged. Images go to
+  `IMPORT_MODEL` then `IMPORT_FALLBACK_MODELS`; PDFs go as an OpenAI `file` part to
+  `IMPORT_PDF_MODELS` only, because Anthropic models behind Nicrron silently ignore
+  `file`/`document` parts. Sample scans: `data/scans/` (made by
+  `scripts/render-scans.ts`).
+
+```bash
+curl -s localhost:3000/api/imports -F file=@data/scans/inv-1004.png
+```
+
 ## Layout
 
 ```

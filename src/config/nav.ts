@@ -1,6 +1,7 @@
 import {
 	Building2,
 	ClipboardCheck,
+	FileScan,
 	type LucideIcon,
 	ScrollText,
 } from "lucide-react";
@@ -17,5 +18,6 @@ export interface NavItem {
 export const mainNav: NavItem[] = [
 	{ to: "/", label: "Review", icon: ClipboardCheck, exact: true },
 	{ to: "/contracts", label: "Contracts", icon: ScrollText },
+	{ to: "/import", label: "Import", icon: FileScan },
 	{ to: "/settings/business", label: "Business", icon: Building2 },
 ];
