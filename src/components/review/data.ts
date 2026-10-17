@@ -3,13 +3,14 @@
  * review works before persistence (#4) exists. Replace with a server function
  * reading D1 when that lands.
  */
-import priceCsv from "../../../data/price_list.csv?raw";
-import paymentsCsv from "../../../data/payments.csv?raw";
+
 import {
 	parseInvoice,
 	parsePayments,
 	parsePriceList,
 } from "#/lib/busyq/load.ts";
+import paymentsCsv from "../../../data/payments.csv?raw";
+import priceCsv from "../../../data/price_list.csv?raw";
 import { buildReview } from "./review.ts";
 
 const invoiceFiles = import.meta.glob("../../../data/invoices/*.json", {

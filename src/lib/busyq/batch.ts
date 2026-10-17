@@ -33,9 +33,7 @@ export const RunResponse = z.object({
 	invoiceId: z.string().min(1),
 	status: z.enum(["completed", "failed"]),
 	findings: z.array(Finding).optional(),
-	error: z
-		.object({ code: z.string().min(1), message: z.string() })
-		.optional(),
+	error: z.object({ code: z.string().min(1), message: z.string() }).optional(),
 	toolCalls: z
 		.array(
 			z.object({
@@ -175,7 +173,9 @@ export function parseArgs(argv: readonly string[]): BatchArgs {
 	const positiveInt = (flag: string, v: string | undefined): number => {
 		const n = Number(v);
 		if (!Number.isInteger(n) || n < 1) {
-			throw new Error(`${flag} needs a positive whole number, got "${v ?? ""}"`);
+			throw new Error(
+				`${flag} needs a positive whole number, got "${v ?? ""}"`,
+			);
 		}
 		return n;
 	};
@@ -309,8 +309,14 @@ export function summarize(
 	const toolErrors = new Map<string, number>();
 	for (const o of outcomes) {
 		if (o.status === "failed" && o.error) {
-			const slot = failures.get(o.error.code) ?? { count: 0, example: o.error.message };
-			failures.set(o.error.code, { count: slot.count + 1, example: slot.example });
+			const slot = failures.get(o.error.code) ?? {
+				count: 0,
+				example: o.error.message,
+			};
+			failures.set(o.error.code, {
+				count: slot.count + 1,
+				example: slot.example,
+			});
 		}
 		for (const t of o.toolErrors) {
 			const key = `${t.name}:${t.code}`;
@@ -334,9 +340,9 @@ export function summarize(
 		foundMinor,
 		plantedMinor,
 		missedByKind: countRows(missed),
-		runFailures: countRows(new Map([...failures].map(([k, v]) => [k, v.count]))).map(
-			(r) => ({ ...r, example: failures.get(r.key)?.example ?? "" }),
-		),
+		runFailures: countRows(
+			new Map([...failures].map(([k, v]) => [k, v.count])),
+		).map((r) => ({ ...r, example: failures.get(r.key)?.example ?? "" })),
 		toolErrors: countRows(toolErrors),
 	};
 }
@@ -358,8 +364,12 @@ export function formatReport(r: BatchReport, currency = "USD"): string {
 		for (const m of r.missedByKind) lines.push(`  ${m.key}: ${m.count}`);
 	}
 	if (r.runFailures.length > 0) {
-		lines.push("", "Run failures (tool or provider problems, not model misses):");
-		for (const f of r.runFailures) lines.push(`  ${f.key} x ${f.count}   e.g. ${f.example}`);
+		lines.push(
+			"",
+			"Run failures (tool or provider problems, not model misses):",
+		);
+		for (const f of r.runFailures)
+			lines.push(`  ${f.key} x ${f.count}   e.g. ${f.example}`);
 	}
 	if (r.toolErrors.length > 0) {
 		lines.push("", "Failed tool calls inside completed runs:");

@@ -3,20 +3,16 @@
  * and builds a vendor dispute draft from the findings. No I/O, no AI; every
  * amount comes from the rules engine.
  */
-import { type Money, formatMoney } from "#/lib/money/index.ts";
-import type {
-	Finding,
-	Invoice,
-	Payment,
-	PriceRow,
-} from "#/lib/busyq/types.ts";
+
+import type { Finding, Invoice, Payment, PriceRow } from "#/lib/busyq/types.ts";
+import { formatMoney, type Money } from "#/lib/money/index.ts";
 import {
-	type UnpricedLine,
 	calculateImpact,
 	checkInvoice,
 	checkInvoicePayments,
 	compareLines,
 	findOrphanPayments,
+	type UnpricedLine,
 } from "#/lib/rules/index.ts";
 
 export type ReviewStatus = "flagged" | "unpriced" | "clean";
