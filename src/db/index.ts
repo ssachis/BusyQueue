@@ -4,6 +4,7 @@ import * as activity from "./schema/activity.ts";
 import * as business from "./schema/business.ts";
 import * as busyq from "./schema/busyq.ts";
 import * as contracts from "./schema/contracts.ts";
+import * as documentLinks from "./schema/document-links.ts";
 import * as documentPayments from "./schema/document-payments.ts";
 import * as documents from "./schema/documents.ts";
 import * as imports from "./schema/imports.ts";
@@ -16,6 +17,7 @@ export const schema = {
 	...activity,
 	...numbering,
 	...documentPayments,
+	...documentLinks,
 	...contracts,
 	...imports,
 };

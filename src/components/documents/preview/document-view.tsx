@@ -4,6 +4,8 @@
  * changes to the business or tax rules never alter a document already sent.
  */
 import { PageBody, PageHeader } from "#/components/app-shell.tsx";
+import { ConvertMenu } from "#/components/documents/convert-menu.tsx";
+import { HistoryPanel } from "#/components/documents/history/history-panel.tsx";
 import { IssueButton } from "#/components/documents/issue-button.tsx";
 import { PaymentsPanel } from "#/components/documents/payments-panel.tsx";
 import { Badge } from "#/components/ui/badge.tsx";
@@ -39,6 +41,7 @@ export function DocumentView({ data }: { data: DocumentPageData }) {
 						: `Issued${doc.issuedAt ? ` ${formatDate(doc.issuedAt.slice(0, 10))}` : ""}. Issued documents can't be edited.`
 				}
 			>
+				<ConvertMenu documentId={doc.id} type={doc.type} status={doc.status} />
 				<IssueButton documentId={doc.id} status={doc.status} />
 			</PageHeader>
 			<PageBody>
@@ -63,6 +66,7 @@ export function DocumentView({ data }: { data: DocumentPageData }) {
 					/>
 					<div className="min-w-0 space-y-6">
 						<PaymentsPanel documentId={doc.id} status={doc.status} />
+						<HistoryPanel documentId={doc.id} />
 					</div>
 				</div>
 			</PageBody>
