@@ -60,7 +60,7 @@ function rowStatus(r: InvoiceRow): RowStatus {
 	if (r.run.failedTools > 0)
 		return { label: "Price check failed", variant: "warning" };
 	if (!r.run.toolLogged)
-		return { label: "Re-run for details", variant: "outline" };
+		return { label: "Re-run", variant: "outline" };
 	return { label: "Clean", variant: "success" };
 }
 
@@ -76,160 +76,146 @@ export function ReviewPage() {
 		navigate({ search: (s) => ({ ...s, invoice: id }) });
 
 	return (
-		<>
-			<PageBody className="space-y-8">
-				<header className="grid items-center gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-					<div className="space-y-5">
-						<div className="flex flex-wrap items-center justify-between gap-3">
-							<p className="text-sm text-muted-foreground">
-								Northfield Unified School District · {totals.run} of{" "}
-								{totals.invoices} invoices checked
-							</p>
-							<fieldset className="flex items-center gap-1 rounded-full border bg-card p-1">
-								<legend className="sr-only">Agent version</legend>
-								{(["v1", "v2"] as const).map((ver) => (
-									<Button
-										key={ver}
-										size="sm"
-										variant={v === ver ? "default" : "ghost"}
-										className="rounded-full"
-										onClick={() => setVersion(ver)}
-									>
-										Agent {ver}
-									</Button>
-								))}
-							</fieldset>
-						</div>
-						<div>
-							<div className="text-6xl font-semibold tracking-tighter tabular-nums sm:text-7xl">
-								{money(totals.recoverableMinor + totals.orphanMinor, currency)}
-							</div>
-							<p className="mt-2 text-lg text-muted-foreground">
-								lost to billing mistakes. Ready to recover.
-							</p>
-						</div>
+		<PageBody className="space-y-8">
+			<header className="grid items-center gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+				<div className="space-y-5">
+					<div className="flex flex-wrap items-center justify-between gap-3">
 						<p className="text-sm text-muted-foreground">
-							{plural(totals.flagged, "invoice")} flagged
-							{totals.orphanMinor > 0
-								? `, plus ${money(totals.orphanMinor, currency)} paid with no invoice`
-								: ""}
-							.{" "}
-							{totals.failedRuns > 0
-								? `${plural(totals.failedRuns, "run")} could not check every line.`
-								: "Every line was checked."}
+							Northfield Unified · {totals.run} of {totals.invoices} checked
+						</p>
+						<fieldset className="flex items-center gap-1 rounded-full border bg-card p-1">
+							<legend className="sr-only">Agent version</legend>
+							{(["v1", "v2"] as const).map((ver) => (
+								<Button
+									key={ver}
+									size="sm"
+									variant={v === ver ? "default" : "ghost"}
+									className="rounded-full"
+									onClick={() => setVersion(ver)}
+								>
+									Agent {ver}
+								</Button>
+							))}
+						</fieldset>
+					</div>
+					<div>
+						<div className="text-6xl font-semibold tracking-tighter tabular-nums sm:text-7xl">
+							{money(totals.recoverableMinor + totals.orphanMinor, currency)}
+						</div>
+						<p className="mt-2 text-lg text-muted-foreground">
+							lost to billing mistakes
 						</p>
 					</div>
-					<div className="rounded-3xl bg-gradient-to-br from-chart-1 to-chart-5 p-6 text-primary-foreground shadow-lg">
-						<div className="flex items-baseline justify-between gap-3">
-							<h2 className="text-base font-semibold">Cash flow</h2>
-							<ul className="flex gap-4 text-xs text-primary-foreground/80">
-								<li className="flex items-center gap-1.5">
-									<span
-										aria-hidden
-										className="size-2 rounded-full bg-primary-foreground"
-									/>
-									Bills in
-								</li>
-								<li className="flex items-center gap-1.5">
-									<span
-										aria-hidden
-										className="size-2 rounded-full bg-primary-foreground/50"
-									/>
-									Paid out
-								</li>
-							</ul>
-						</div>
-						<div className="mt-3">
-							<CashflowChart data={summary.cashflow} />
-						</div>
-					</div>
-				</header>
-
-				<FailuresPanel summary={summary} />
-
-				<div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-					<Card className="gap-4">
-						<CardHeader>
-							<CardTitle>Invoices</CardTitle>
-							<CardDescription>
-								All amounts come from code, never from the model.
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<ul className="max-h-[34rem] divide-y overflow-y-auto rounded-md border">
-								{summary.invoices.map((r) => {
-									const st = rowStatus(r);
-									return (
-										<li key={r.id}>
-											<button
-												type="button"
-												onClick={() => select(r.id)}
-												className={cn(
-													"flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
-													invoiceId === r.id && "bg-accent",
-												)}
-											>
-												<span className="min-w-0">
-													<span className="block truncate font-medium">
-														{r.invoiceNumber}
-													</span>
-													<span className="block truncate text-xs text-muted-foreground">
-														{r.vendor}
-													</span>
-												</span>
-												<span className="flex shrink-0 items-center gap-2">
-													{(r.run?.totalMinor ?? 0) > 0 ? (
-														<span className="text-xs font-medium">
-															{money(r.run?.totalMinor ?? 0, currency)}
-														</span>
-													) : null}
-													<Badge variant={st.variant}>{st.label}</Badge>
-												</span>
-											</button>
-										</li>
-									);
-								})}
-							</ul>
-						</CardContent>
-					</Card>
-
-					{detail ? (
-						<InvoicePanel
-							key={`${detail.invoice.id}-${v}-${detail.run?.id ?? "none"}`}
-							detail={detail}
-							version={v}
-						/>
-					) : null}
+					<p className="text-sm text-muted-foreground">
+						{plural(totals.flagged, "invoice")} flagged
+						{totals.orphanMinor > 0
+							? ` · ${money(totals.orphanMinor, currency)} paid with no invoice`
+							: ""}
+					</p>
 				</div>
+				<div className="rounded-3xl bg-gradient-to-br from-chart-1 to-chart-5 p-6 text-primary-foreground shadow-lg">
+					<div className="flex items-baseline justify-between gap-3">
+						<h2 className="text-base font-semibold">Cash flow</h2>
+						<ul className="flex gap-4 text-xs text-primary-foreground/80">
+							<li className="flex items-center gap-1.5">
+								<span
+									aria-hidden
+									className="size-2 rounded-full bg-primary-foreground"
+								/>
+								Bills in
+							</li>
+							<li className="flex items-center gap-1.5">
+								<span
+									aria-hidden
+									className="size-2 rounded-full bg-primary-foreground/50"
+								/>
+								Paid out
+							</li>
+						</ul>
+					</div>
+					<div className="mt-3">
+						<CashflowChart data={summary.cashflow} />
+					</div>
+				</div>
+			</header>
 
-				{summary.orphans.length > 0 ? (
-					<Card className="gap-4">
-						<CardHeader>
-							<CardTitle>Payments with no invoice</CardTitle>
-							<CardDescription>
-								Money that left with no matching invoice on file. Found by code
-								across all payments.
-							</CardDescription>
-						</CardHeader>
-						<CardContent>
-							<ul className="divide-y rounded-md border text-sm">
-								{summary.orphans.map((f) => (
-									<li
-										key={f.paymentId}
-										className="flex items-start justify-between gap-4 px-3 py-2"
-									>
-										<span>{f.detail}</span>
-										<span className="shrink-0 font-medium">
-											{money(f.impactMinor, f.currency)}
-										</span>
+			<FailuresPanel summary={summary} />
+
+			<div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+				<Card className="gap-4">
+					<CardHeader>
+						<CardTitle>Invoices</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<ul className="max-h-[34rem] divide-y overflow-y-auto rounded-md border">
+							{summary.invoices.map((r) => {
+								const st = rowStatus(r);
+								return (
+									<li key={r.id}>
+										<button
+											type="button"
+											onClick={() => select(r.id)}
+											className={cn(
+												"flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
+												invoiceId === r.id && "bg-accent",
+											)}
+										>
+											<span className="min-w-0">
+												<span className="block truncate font-medium">
+													{r.invoiceNumber}
+												</span>
+												<span className="block truncate text-xs text-muted-foreground">
+													{r.vendor}
+												</span>
+											</span>
+											<span className="flex shrink-0 items-center gap-2">
+												{(r.run?.totalMinor ?? 0) > 0 ? (
+													<span className="text-xs font-medium">
+														{money(r.run?.totalMinor ?? 0, currency)}
+													</span>
+												) : null}
+												<Badge variant={st.variant}>{st.label}</Badge>
+											</span>
+										</button>
 									</li>
-								))}
-							</ul>
-						</CardContent>
-					</Card>
+								);
+							})}
+						</ul>
+					</CardContent>
+				</Card>
+
+				{detail ? (
+					<InvoicePanel
+						key={`${detail.invoice.id}-${v}-${detail.run?.id ?? "none"}`}
+						detail={detail}
+						version={v}
+					/>
 				) : null}
-			</PageBody>
-		</>
+			</div>
+
+			{summary.orphans.length > 0 ? (
+				<Card className="gap-4">
+					<CardHeader>
+						<CardTitle>Payments with no invoice</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<ul className="divide-y rounded-md border text-sm">
+							{summary.orphans.map((f) => (
+								<li
+									key={f.paymentId}
+									className="flex items-start justify-between gap-4 px-3 py-2"
+								>
+									<span>{f.detail}</span>
+									<span className="shrink-0 font-medium">
+										{money(f.impactMinor, f.currency)}
+									</span>
+								</li>
+							))}
+						</ul>
+					</CardContent>
+				</Card>
+			) : null}
+		</PageBody>
 	);
 }
 
@@ -244,9 +230,7 @@ function FailuresPanel({ summary }: { summary: ReviewSummary }) {
 					Why {version} runs fail
 				</CardTitle>
 				<CardDescription>
-					{failures.failedRuns} of {failures.runs} runs had failed tool calls.
-					Grouped by code from the stored tool calls; the same failures show in
-					PRISM.
+					{failures.failedRuns} of {failures.runs} runs had failed tool calls
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-4 text-sm">
@@ -273,7 +257,11 @@ function FailuresPanel({ summary }: { summary: ReviewSummary }) {
 						</li>
 					))}
 				</ul>
-				<div className="grid gap-4 md:grid-cols-2">
+				<details className="group">
+					<summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+						Show the names and units that don't match
+					</summary>
+					<div className="mt-4 grid gap-4 md:grid-cols-2">
 					{failures.vendorVariants.length > 0 ? (
 						<section className="space-y-2">
 							<h3 className="font-medium">Vendor names on the invoice</h3>
@@ -321,7 +309,8 @@ function FailuresPanel({ summary }: { summary: ReviewSummary }) {
 							</ul>
 						</section>
 					) : null}
-				</div>
+					</div>
+				</details>
 			</CardContent>
 		</Card>
 	);
@@ -364,8 +353,7 @@ function InvoicePanel({
 					<div className="space-y-1.5">
 						<CardTitle>{invoice.invoiceNumber}</CardTitle>
 						<CardDescription>
-							{invoice.vendor} · issued {invoice.issueDate} · stated total{" "}
-							{money(
+							{invoice.vendor} · {money(
 								toMinor(invoice.statedTotal, invoice.currency).minor,
 								invoice.currency,
 							)}
@@ -384,7 +372,11 @@ function InvoicePanel({
 					</p>
 				) : (
 					<>
-						<div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+						<details className="text-xs text-muted-foreground">
+							<summary className="cursor-pointer hover:text-foreground">
+								Run details
+							</summary>
+							<div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
 							<span>{run.model ?? "model unknown"}</span>
 							<span>{run.toolCalls} tool calls</span>
 							<span>{utc(run.startedAt)}</span>
@@ -398,7 +390,8 @@ function InvoicePanel({
 									<code className="font-mono">{run.id.slice(0, 8)}</code>
 								</span>
 							) : null}
-						</div>
+							</div>
+						</details>
 						<div className="flex flex-wrap gap-1.5">
 							{run.toolLog.map((t, i) => (
 								<Badge
@@ -419,7 +412,7 @@ function InvoicePanel({
 
 						{run.findings.length > 0 ? (
 							<section className="space-y-2">
-								<h3 className="text-sm font-medium">Findings (code)</h3>
+								<h3 className="text-sm font-medium">What went wrong</h3>
 								<ul className="divide-y rounded-md border text-sm">
 									{run.findings.map((f) => (
 										<li
@@ -441,21 +434,19 @@ function InvoicePanel({
 									))}
 								</ul>
 								<div className="flex justify-between text-sm font-medium">
-									<span>Recoverable on this invoice</span>
+									<span>Recover</span>
 									<span>{money(total, invoice.currency)}</span>
 								</div>
 							</section>
 						) : null}
 
 						{run.explanation ? (
-							<section className="space-y-2">
-								<h3 className="flex items-center gap-1.5 text-sm font-medium">
+							<details className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
+								<summary className="flex cursor-pointer items-center gap-1.5 font-medium">
 									<Sparkles className="size-4 text-info" /> Agent's explanation
-								</h3>
-								<p className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
-									{run.explanation}
-								</p>
-							</section>
+								</summary>
+								<p className="mt-2 text-muted-foreground">{run.explanation}</p>
+							</details>
 						) : null}
 
 						{draft ? <DraftEditor draft={draft} approval={approval} /> : null}
@@ -498,15 +489,7 @@ function DraftEditor({
 		<>
 			<Separator />
 			<section className="space-y-3">
-				<div>
-					<h3 className="text-sm font-medium">
-						Dispute email (written by the agent)
-					</h3>
-					<p className="text-xs text-muted-foreground">
-						Amounts were checked against the code's findings before the draft
-						was saved. Nothing is sent without Approve.
-					</p>
-				</div>
+				<h3 className="text-sm font-medium">Dispute email</h3>
 				<div className="space-y-1.5">
 					<Label htmlFor="subject">Subject</Label>
 					<Input
@@ -527,9 +510,8 @@ function DraftEditor({
 				{locked && approval ? (
 					<div className="flex items-center gap-2 text-sm text-muted-foreground">
 						<Check className="size-4 text-success" />
-						Approved by {approval.approvedBy} on {utc(approval.approvedAt)} for{" "}
-						{money(approval.totalImpactMinor, approval.currency)}. Logged; the
-						draft is read-only.
+						Approved by {approval.approvedBy} · {utc(approval.approvedAt)} ·{" "}
+						{money(approval.totalImpactMinor, approval.currency)}
 					</div>
 				) : (
 					<div className="flex flex-wrap items-end gap-2">
