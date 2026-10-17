@@ -6,6 +6,12 @@
  * Numbers stay decimal strings end to end; totals come from `documentTotals`
  * (the tax engine), never from arithmetic here.
  */
+import type { CatalogItemFields } from "#/lib/catalog/item.ts";
+import {
+	type ClientAddress,
+	type ClientFormInput,
+	clientToParty,
+} from "#/lib/clients/client.ts";
 import { documentTotals } from "#/lib/documents/totals.ts";
 import {
 	DocumentDraft,
@@ -355,6 +361,120 @@ export function previewTotals(
 			skipped,
 		};
 	}
+}
+
+// --- saved clients and catalog (#14) ----------------------------------------
+
+/** A saved client as the picker receives it. */
+export type PickedClient = ClientAddress & {
+	id: string;
+	placeOfSupply: string | null;
+};
+
+/**
+ * Fill the buyer from a saved client and link it. Place of supply (IN) is
+ * taken from the client when it has one, otherwise cleared so the buyer's
+ * state applies. Everything stays editable afterwards.
+ */
+export function applyClient(form: DraftForm, client: PickedClient): DraftForm {
+	const party = clientToParty(client);
+	return {
+		...form,
+		clientId: client.id,
+		buyer: {
+			name: party.name,
+			addressLines: party.addressLines.join("\n"),
+			city: party.city ?? "",
+			region: party.region ?? "",
+			postalCode: party.postalCode ?? "",
+			country: party.country,
+			taxId: party.taxId ?? "",
+			email: party.email ?? "",
+		},
+		placeOfSupply: client.placeOfSupply ?? "",
+	};
+}
+
+/** Unlink the saved client and empty the buyer for manual entry. */
+export function clearClient(form: DraftForm, country: string): DraftForm {
+	return {
+		...form,
+		clientId: undefined,
+		buyer: {
+			name: "",
+			addressLines: "",
+			city: "",
+			region: "",
+			postalCode: "",
+			country,
+			taxId: "",
+			email: "",
+		},
+		placeOfSupply: "",
+	};
+}
+
+/**
+ * The "Save as client" payload for a buyer typed by hand. Address rows 1
+ * and 2 map to the client's two address lines; rows 3–4 join line 2.
+ */
+export function clientInputFromBuyer(
+	buyer: BuyerForm,
+	placeOfSupply: string,
+): ClientFormInput {
+	const rows = buyer.addressLines
+		.split("\n")
+		.map((l) => l.trim())
+		.filter(Boolean);
+	return {
+		name: buyer.name.trim(),
+		addressLine1: rows[0] ?? "",
+		addressLine2: rows.slice(1).join(", "),
+		city: buyer.city.trim(),
+		region: buyer.region.trim().toUpperCase(),
+		postalCode: buyer.postalCode.trim(),
+		country: buyer.country.trim().toUpperCase(),
+		taxId: buyer.taxId.trim(),
+		email: buyer.email.trim(),
+		placeOfSupply: placeOfSupply.trim(),
+	};
+}
+
+export interface CatalogFill {
+	patch: Partial<LineForm>;
+	/** Set when the item's tax code isn't valid here and the line kept its own. */
+	taxCodeRejected?: string;
+}
+
+/**
+ * Fill a line from a catalog item. Quantity and discount stay as typed. The
+ * item's tax code is used only when the tax engine offers it for this
+ * business; otherwise the line keeps its current code and the caller warns.
+ */
+export function fillFromCatalog(
+	line: LineForm,
+	item: Pick<
+		CatalogItemFields,
+		"id" | "name" | "unit" | "unitPrice" | "taxCode" | "rate" | "hsnSac"
+	>,
+	taxOptions: readonly TaxCodeOption[],
+): CatalogFill {
+	const valid = taxOptions.some((o) => o.code === item.taxCode);
+	const taxCode = valid ? item.taxCode : line.taxCode;
+	const rate =
+		taxCode !== US_SALES ? "" : valid ? (item.rate ?? "") : line.rate;
+	return {
+		patch: {
+			description: item.name,
+			unit: item.unit ?? "",
+			unitPrice: item.unitPrice,
+			taxCode,
+			rate,
+			hsnSac: item.hsnSac ?? "",
+			catalogItemId: item.id,
+		},
+		...(valid ? {} : { taxCodeRejected: item.taxCode }),
+	};
 }
 
 // --- misc -------------------------------------------------------------------

@@ -1,5 +1,9 @@
 /** Display helpers for documents. Pure; no floats, no time-zone dependence. */
-import type { DocumentStatus, DocumentType } from "#/lib/documents/types.ts";
+import type {
+	DisplayStatus,
+	DocumentStatus,
+	DocumentType,
+} from "#/lib/documents/types.ts";
 import { isDecimalString, minorUnitDigits } from "#/lib/money/index.ts";
 import type { TaxComponentCode } from "#/lib/tax/index.ts";
 
@@ -34,6 +38,28 @@ export const STATUS_VARIANT: Record<
 	draft: "outline",
 	issued: "info",
 	void: "destructive",
+};
+
+/** Derived status (lifecycle + payments) as the list and header show it. */
+export const DISPLAY_STATUS_LABEL: Record<DisplayStatus, string> = {
+	draft: "Draft",
+	issued: "Issued",
+	partially_paid: "Partially paid",
+	paid: "Paid",
+	overdue: "Overdue",
+	void: "Void",
+};
+
+export const DISPLAY_STATUS_VARIANT: Record<
+	DisplayStatus,
+	"outline" | "info" | "warning" | "success" | "destructive" | "secondary"
+> = {
+	draft: "outline",
+	issued: "info",
+	partially_paid: "warning",
+	paid: "success",
+	overdue: "destructive",
+	void: "secondary",
 };
 
 const COMPONENT_LABEL: Record<TaxComponentCode, string> = {

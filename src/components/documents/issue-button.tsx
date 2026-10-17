@@ -2,7 +2,10 @@
  * Issuing (#16). On a draft: "Issue" with a confirm step, which assigns the
  * next number, snapshots seller and totals, and locks the document. On an
  * issued or void document: the number and its status.
- * Keep the props: the document page passes exactly these.
+ *
+ * `beforeIssue` runs after the confirm click and before issuing: the editor
+ * passes "save pending edits" so what gets issued is what's on screen. If it
+ * returns false (the save failed or the form is invalid), nothing is issued.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
@@ -17,6 +20,10 @@ import { getIssueState, issueDocument } from "#/server/documents/issue.ts";
 export interface IssueButtonProps {
 	documentId: string;
 	status: "draft" | "issued" | "void";
+	/** Resolve true to go ahead and issue, false to stop (e.g. save failed). */
+	beforeIssue?: () => Promise<boolean>;
+	/** Block the Issue button, e.g. while the editor is saving or deleting. */
+	disabled?: boolean;
 }
 
 const issueStateKey = (documentId: string) => [
@@ -25,11 +32,16 @@ const issueStateKey = (documentId: string) => [
 	"issue-state",
 ];
 
-export function IssueButton({ documentId, status }: IssueButtonProps) {
+export function IssueButton({
+	documentId,
+	status,
+	beforeIssue,
+	disabled = false,
+}: IssueButtonProps) {
 	const router = useRouter();
 	const queryClient = useQueryClient();
 	const [confirming, setConfirming] = useState(false);
-	const [pending, setPending] = useState(false);
+	const [pending, setPending] = useState<"saving" | "issuing" | null>(null);
 	// Set right after issuing, so the number shows before the page reloads.
 	const [justIssued, setJustIssued] = useState<string | null>(null);
 
@@ -42,7 +54,22 @@ export function IssueButton({ documentId, status }: IssueButtonProps) {
 	const number = justIssued ?? state.data?.number ?? null;
 
 	async function onIssue() {
-		setPending(true);
+		if (beforeIssue) {
+			setPending("saving");
+			let ok = false;
+			try {
+				ok = await beforeIssue();
+			} catch (err) {
+				toast.error(err instanceof Error ? err.message : "Could not save");
+			}
+			if (!ok) {
+				// The caller has said why (toast); stay a draft.
+				setPending(null);
+				setConfirming(false);
+				return;
+			}
+		}
+		setPending("issuing");
 		try {
 			const result = await issueDocument({ data: { documentId } });
 			setJustIssued(result.number);
@@ -55,7 +82,7 @@ export function IssueButton({ documentId, status }: IssueButtonProps) {
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : "Could not issue");
 		} finally {
-			setPending(false);
+			setPending(null);
 		}
 	}
 
@@ -78,7 +105,7 @@ export function IssueButton({ documentId, status }: IssueButtonProps) {
 
 	if (!confirming) {
 		return (
-			<Button onClick={() => setConfirming(true)}>
+			<Button onClick={() => setConfirming(true)} disabled={disabled}>
 				<Lock />
 				Issue
 			</Button>
@@ -92,19 +119,30 @@ export function IssueButton({ documentId, status }: IssueButtonProps) {
 			className="flex flex-wrap items-center gap-2 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-sm"
 		>
 			<span className="text-foreground">
-				This assigns the next number and locks the document.
+				{beforeIssue
+					? "This saves your changes, assigns the next number and locks the document."
+					: "This assigns the next number and locks the document."}
 			</span>
 			<Button
 				variant="outline"
 				size="sm"
 				onClick={() => setConfirming(false)}
-				disabled={pending}
+				disabled={pending !== null}
 			>
 				Cancel
 			</Button>
-			<Button size="sm" onClick={onIssue} disabled={pending} autoFocus>
+			<Button
+				size="sm"
+				onClick={onIssue}
+				disabled={pending !== null || disabled}
+				autoFocus
+			>
 				{pending ? <Loader2 className="animate-spin" /> : <Lock />}
-				{pending ? "Issuing…" : "Issue now"}
+				{pending === "saving"
+					? "Saving…"
+					: pending === "issuing"
+						? "Issuing…"
+						: "Issue now"}
 			</Button>
 		</div>
 	);

@@ -1,4 +1,6 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { CatalogTypeahead } from "#/components/catalog/catalog-typeahead.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import { Input } from "#/components/ui/input.tsx";
 import type { TaxCodeOption } from "#/lib/tax/index.ts";
@@ -6,6 +8,7 @@ import { US_SALES } from "#/lib/tax/index.ts";
 import { Field, NativeSelect } from "./field.tsx";
 import {
 	blankLine,
+	fillFromCatalog,
 	type LineForm,
 	moveLine,
 	removeLine,
@@ -20,6 +23,7 @@ export function LineItems({
 	taxOptions,
 	defaultTaxCode,
 	sellerCountry,
+	currency,
 	errors,
 }: {
 	lines: LineForm[];
@@ -27,6 +31,7 @@ export function LineItems({
 	taxOptions: TaxCodeOption[];
 	defaultTaxCode: string;
 	sellerCountry: string;
+	currency: string;
 	errors: Record<string, string>;
 }) {
 	const india = sellerCountry === "IN";
@@ -55,6 +60,7 @@ export function LineItems({
 						india={india}
 						taxOptions={taxOptions}
 						sellerCountry={sellerCountry}
+						currency={currency}
 						errors={errors}
 						onPatch={(patch) => onChange(updateLine(lines, i, patch))}
 						onMove={(to) => onChange(moveLine(lines, i, to))}
@@ -83,6 +89,7 @@ function LineRow({
 	india,
 	taxOptions,
 	sellerCountry,
+	currency,
 	errors,
 	onPatch,
 	onMove,
@@ -94,6 +101,7 @@ function LineRow({
 	india: boolean;
 	taxOptions: TaxCodeOption[];
 	sellerCountry: string;
+	currency: string;
 	errors: Record<string, string>;
 	onPatch: (patch: Partial<LineForm>) => void;
 	onMove: (to: number) => void;
@@ -128,13 +136,33 @@ function LineRow({
 					error={err("description")}
 					className="flex-1"
 				>
-					{/* #14: the catalog type-ahead attaches to this input. */}
-					<Input
+					<CatalogTypeahead
 						id={id("description")}
 						value={line.description}
-						placeholder="What you are billing for"
-						aria-invalid={invalid("description")}
-						onChange={(e) => onPatch({ description: e.target.value })}
+						currency={currency}
+						placeholder="What you are billing for, or search the catalog"
+						invalid={!!err("description")}
+						onChange={(description) =>
+							// Clearing the text drops the catalog link; edits keep it.
+							onPatch(
+								description.trim() === ""
+									? { description, catalogItemId: undefined }
+									: { description },
+							)
+						}
+						onPick={(item) => {
+							const { patch, taxCodeRejected } = fillFromCatalog(
+								line,
+								item,
+								taxOptions,
+							);
+							onPatch(patch);
+							if (taxCodeRejected) {
+								toast.warning(
+									`${item.name}: tax code ${taxCodeRejected} isn't valid for ${sellerCountry}, so the line kept ${patch.taxCode || "its own"}. Check the tax.`,
+								);
+							}
+						}}
 					/>
 				</Field>
 				<div className="mt-6 flex shrink-0 items-center">

@@ -16,8 +16,15 @@ export interface ImportResponse {
 	model: string;
 	fallbackUsed: boolean;
 	prismTraceId: string;
-	/** Invoices already stored under the same invoice number. */
-	existing: { id: string; vendor: string }[];
+	/** Invoices already stored for the same vendor and invoice number. */
+	existing: ExistingInvoice[];
+}
+
+/** A stored invoice the draft would duplicate. */
+export interface ExistingInvoice {
+	id: string;
+	vendor: string;
+	invoiceNumber: string;
 }
 
 /** `POST /api/imports` error body. */
@@ -44,6 +51,14 @@ export interface SavedImport {
 	corrected: string[];
 	prismTraceId: string;
 }
+
+/**
+ * `saveImport` result. A draft whose vendor and invoice number are already
+ * on file is refused unless the user chose "Save anyway as a separate copy".
+ */
+export type SaveImportResult =
+	| ({ status: "saved" } & SavedImport)
+	| { status: "duplicate"; existing: ExistingInvoice[]; prismTraceId: string };
 
 export interface ImportRunSummary {
 	runId: string;
