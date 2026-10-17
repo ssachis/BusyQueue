@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiRunsRouteImport } from './routes/api/runs'
+import { Route as SettingsBusinessRouteImport } from './routes/settings/business'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +29,44 @@ const ApiRunsRoute = ApiRunsRouteImport.update({
   path: '/api/runs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsBusinessRoute = SettingsBusinessRouteImport.update({
+  id: '/settings/business',
+  path: '/settings/business',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/runs': typeof ApiRunsRoute
+  '/settings/business': typeof SettingsBusinessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/runs': typeof ApiRunsRoute
+  '/settings/business': typeof SettingsBusinessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/chat': typeof ApiChatRoute
   '/api/runs': typeof ApiRunsRoute
+  '/settings/business': typeof SettingsBusinessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/chat' | '/api/runs'
+  fullPaths: '/' | '/api/chat' | '/api/runs' | '/settings/business'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/chat' | '/api/runs'
-  id: '__root__' | '/' | '/api/chat' | '/api/runs'
+  to: '/' | '/api/chat' | '/api/runs' | '/settings/business'
+  id: '__root__' | '/' | '/api/chat' | '/api/runs' | '/settings/business'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiRunsRoute: typeof ApiRunsRoute
+  SettingsBusinessRoute: typeof SettingsBusinessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +92,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRunsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/business': {
+      id: '/settings/business'
+      path: '/settings/business'
+      fullPath: '/settings/business'
+      preLoaderRoute: typeof SettingsBusinessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiChatRoute: ApiChatRoute,
   ApiRunsRoute: ApiRunsRoute,
+  SettingsBusinessRoute: SettingsBusinessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

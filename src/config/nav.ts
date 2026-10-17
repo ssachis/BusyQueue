@@ -1,4 +1,4 @@
-import { ClipboardCheck, type LucideIcon } from "lucide-react";
+import { Building2, ClipboardCheck, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
 	to: string;
@@ -11,4 +11,5 @@ export interface NavItem {
 /** Primary navigation. Add an entry per top-level route. */
 export const mainNav: NavItem[] = [
 	{ to: "/", label: "Review", icon: ClipboardCheck, exact: true },
+	{ to: "/settings/business", label: "Business", icon: Building2 },
 ];
