@@ -97,6 +97,21 @@ const serverEnvSchema = z.object({
 		"openai/gpt-5.4",
 		"openai/gpt-5.4-mini",
 	]),
+	// ── Forwarding inbox (Email Routing → the Worker's email() handler) ──
+	/** The address Email Routing delivers to this Worker; shown on /inbox. */
+	INBOX_ADDRESS: z.string().email().default("invoices@in.buddhsentripathi.com"),
+	/**
+	 * Comma list of sender addresses or domains ("ap@vendor.com",
+	 * "vendor.com"). Unset: everyone may send. Others are stored as ignored.
+	 */
+	INBOX_ALLOWED_SENDERS: commaList.default([]),
+	/** Comma list of the business's own domains: mail from them is our own document. */
+	INBOX_OWN_DOMAINS: commaList.default([]),
+	/** Small text model for the classification fallback when the rules are unsure. */
+	INBOX_CLASSIFY_MODEL: z.string().min(1).default("openai/gpt-5.4-mini"),
+	INBOX_CLASSIFY_FALLBACK_MODELS: commaList.default([
+		"anthropic/claude-haiku-5-5",
+	]),
 
 	// ── PRISM tracing (disabled when the key is unset) ──
 	PRISMTRACE_API_KEY: optionalString,

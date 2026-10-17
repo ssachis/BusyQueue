@@ -11,6 +11,7 @@ import * as documentLinks from "./schema/document-links.ts";
 import * as documentPayments from "./schema/document-payments.ts";
 import * as documents from "./schema/documents.ts";
 import * as imports from "./schema/imports.ts";
+import * as inbox from "./schema/inbox.ts";
 import * as numbering from "./schema/numbering.ts";
 import * as reminders from "./schema/reminders.ts";
 
@@ -28,6 +29,7 @@ export const schema = {
 	...catalog,
 	...reminders,
 	...docImports,
+	...inbox,
 };
 
 /** Drizzle client on the Worker's D1 binding. Server-only. */
