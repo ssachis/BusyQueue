@@ -80,6 +80,9 @@ export interface ToolCallSummary {
 	name: string;
 	status: "ok" | "error";
 	errorCode?: string;
+	/** The tool's own error message and structured details (e.g. unmatched lines). */
+	errorMessage?: string;
+	details?: Record<string, unknown>;
 }
 
 export type RunErrorCode =
@@ -223,6 +226,10 @@ export async function runAgent(
 								name: call.name,
 								status: "error",
 								errorCode: result.error.code,
+								errorMessage: result.error.message,
+								...(result.error.details
+									? { details: result.error.details }
+									: {}),
 							},
 				);
 				messages.push({
@@ -284,7 +291,7 @@ export async function runAgent(
 			model,
 			explanation,
 			error: error ? `${error.code}: ${error.message}` : null,
-			toolCalls: toolCalls.length,
+			toolCalls,
 			findings: result.findings,
 			draft,
 		});

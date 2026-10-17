@@ -21,6 +21,7 @@ import type {
 	Payment,
 	PriceRow,
 } from "#/lib/busyq/types.ts";
+import type { ToolCallSummary } from "./run.ts";
 
 export interface DraftRecord {
 	id: string;
@@ -37,7 +38,7 @@ export interface FinishedRun {
 	model: string | null;
 	explanation: string | null;
 	error: string | null;
-	toolCalls: number;
+	toolCalls: ToolCallSummary[];
 	findings: Finding[];
 	draft: DraftRecord | null;
 }
@@ -135,7 +136,8 @@ export function createD1Store(db: Db): AgentStore {
 					model: run.model,
 					explanation: run.explanation,
 					error: run.error,
-					toolCalls: run.toolCalls,
+					toolCalls: run.toolCalls.length,
+					toolLog: run.toolCalls,
 					finishedAt: new Date().toISOString(),
 				})
 				.where(eq(agentRuns.id, run.id));

@@ -22,6 +22,13 @@
       "when": 1792259875738,
       "tag": "0002_business_profile",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792261419041,
+      "tag": "0003_agent_tool_log",
+      "breakpoints": true
     }
   ]
 }
