@@ -135,6 +135,19 @@ export const agentRuns = sqliteTable(
 		explanation: text("explanation"),
 		error: text("error"),
 		toolCalls: integer("tool_calls").notNull().default(0),
+		/** Each tool call's name, status and, on failure, its error code, message and details. */
+		toolLog: text("tool_log", { mode: "json" })
+			.$type<
+				{
+					name: string;
+					status: "ok" | "error";
+					errorCode?: string;
+					errorMessage?: string;
+					details?: Record<string, unknown>;
+				}[]
+			>()
+			.notNull()
+			.default(sql`'[]'`),
 		startedAt: text("started_at").notNull().default(now),
 		finishedAt: text("finished_at"),
 	},

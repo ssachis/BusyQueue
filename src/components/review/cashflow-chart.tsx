@@ -1,5 +1,5 @@
 import { formatMoney } from "#/lib/money/index.ts";
-import type { CashflowMonth } from "./review.ts";
+import type { CashflowMonth } from "#/lib/busyq/cashflow.ts";
 
 const compact = (minor: number) => {
 	const dollars = minor / 100;

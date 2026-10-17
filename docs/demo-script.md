@@ -70,6 +70,10 @@ Failed tool calls inside completed runs:
   - `lookup_vendor_prices` is red: `price_not_found: No agreed price for 5 of 5
     lines from vendor "Harbor Foods, Inc."`.
   - The agent says it couldn't check the lines instead of guessing.
+- **In the app** (`/?v=v1`): the **"Why v1 runs fail"** panel groups the failed tool
+  calls and names the cause in one code-generated sentence. It lists the vendor spellings
+  that don't match the price list, and the units billed differently from the contract.
+  This works without PRISM's judge.
 - **PRISM → Alerts:** rule *"BusyQ: failed tool calls (v1 price lookup)"*,
   `trace_failures_per_hour` above 3, high severity.
 - **PRISM → Clusters:** *"failures in busyq-auditor …"*:
@@ -101,7 +105,7 @@ Dollars found    $9,878.95 of $9,878.95 planted
 
 ## 5. Human in the loop (15 s)
 
-Approve a dispute draft on the review page:
+On `/?v=v2&invoice=inv-1001`, edit the agent's email if you want, then Approve:
 - **The approval is logged:** who, when, what and how much go into an append-only table.
 - **The database enforces it:** triggers stop approvals being edited or deleted, and an
   approved draft can't change.

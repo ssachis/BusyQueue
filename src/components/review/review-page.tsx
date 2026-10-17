@@ -1,532 +1,570 @@
-import { Check } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { PageBody } from "#/components/app-shell.tsx";
+import { getRouteApi, useRouter } from "@tanstack/react-router";
+import { Check, Loader2, Play, Sparkles, TriangleAlert } from "lucide-react";
+import { type ReactNode, useState } from "react";
+import { toast } from "sonner";
+import { PageBody, PageHeader } from "#/components/app-shell.tsx";
+import { Badge } from "#/components/ui/badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "#/components/ui/card.tsx";
+import { Input } from "#/components/ui/input.tsx";
+import { Label } from "#/components/ui/label.tsx";
+import { Separator } from "#/components/ui/separator.tsx";
 import { Textarea } from "#/components/ui/textarea.tsx";
-import type { FindingKind } from "#/lib/busyq/types.ts";
+import type { AgentVersion } from "#/lib/busyq/types.ts";
 import { formatMoney, toMinor } from "#/lib/money/index.ts";
 import { cn } from "#/lib/utils.ts";
-import { CashflowChart } from "./cashflow-chart.tsx";
-import { cashflow, reviews } from "./data.ts";
-import {
-	disputeDraft,
-	type InvoiceReview,
-	type ReviewStatus,
-} from "./review.ts";
+import { approve, runAgentOn, saveDraft } from "#/server/review.ts";
+import type {
+	InvoiceDetail,
+	InvoiceRow,
+	ReviewSummary,
+} from "#/server/review-store.ts";
 
-const STORAGE_KEY = "busyq.approvals.v1";
+const route = getRouteApi("/");
 
-/** One approval: what was approved, when, and for how much. Append-only. */
-type Approval = {
-	invoiceId: string;
-	at: string;
-	amountMinor: number;
-	currency: string;
-	draft: string;
+const KIND_LABEL: Record<string, string> = {
+	overcharge: "Overcharge",
+	duplicate_line: "Duplicate line",
+	wrong_total: "Wrong total",
+	duplicate_payment: "Duplicate payment",
+	orphan_payment: "Payment with no invoice",
 };
 
-function loadApprovals(): Approval[] {
-	try {
-		const raw = window.localStorage.getItem(STORAGE_KEY);
-		return raw ? (JSON.parse(raw) as Approval[]) : [];
-	} catch {
-		return [];
-	}
-}
+/** Same text on server and client (no time-zone-dependent rendering). */
+const utc = (iso: string) => `${iso.slice(0, 16).replace("T", " ")} UTC`;
 
-function saveApprovals(list: Approval[]) {
-	try {
-		window.localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-	} catch {
-		// Storage can be unavailable (private mode); approvals then last for this visit only.
-	}
-}
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-type Version = "v1" | "v2";
-
-const usd = (minor: number, currency = "USD") =>
+const money = (minor: number, currency = "USD") =>
 	formatMoney({ minor, currency });
 
-/** What went wrong, in the words an owner would use, and the token colour for it. */
-const KIND: Record<FindingKind, { label: string; dot: string }> = {
-	overcharge: { label: "Charged above contract price", dot: "bg-destructive" },
-	duplicate_line: { label: "Same line billed twice", dot: "bg-warning" },
-	wrong_total: { label: "Total doesn't add up", dot: "bg-info" },
-	duplicate_payment: { label: "Paid twice", dot: "bg-primary" },
-	orphan_payment: { label: "Paid with no invoice", dot: "bg-muted-foreground" },
+type RowStatus = {
+	label: string;
+	variant: "destructive" | "warning" | "success" | "info" | "outline";
 };
 
-const STATUS_DOT: Record<ReviewStatus, string> = {
-	flagged: "bg-destructive",
-	unpriced: "bg-warning",
-	clean: "bg-success",
-};
+function rowStatus(r: InvoiceRow): RowStatus {
+	if (!r.run) return { label: "Not run", variant: "outline" };
+	if (r.run.status === "failed")
+		return { label: "Run failed", variant: "destructive" };
+	if (r.run.status === "running") return { label: "Running", variant: "info" };
+	if (r.run.approved) return { label: "Approved", variant: "info" };
+	if (r.run.totalMinor > 0) return { label: "Flagged", variant: "destructive" };
+	if (r.run.failedTools > 0)
+		return { label: "Price check failed", variant: "warning" };
+	if (!r.run.toolLogged)
+		return { label: "Re-run for details", variant: "outline" };
+	return { label: "Clean", variant: "success" };
+}
 
-const STATUS_TEXT: Record<ReviewStatus, string> = {
-	flagged: "Money lost",
-	unpriced: "Not fully checked",
-	clean: "All good",
-};
-
-const FILTERS: { id: ReviewStatus | "all"; label: string }[] = [
-	{ id: "flagged", label: "Money lost" },
-	{ id: "unpriced", label: "Not fully checked" },
-	{ id: "clean", label: "All good" },
-	{ id: "all", label: "All" },
-];
+function Stat({
+	label,
+	value,
+	note,
+}: {
+	label: string;
+	value: string;
+	note?: ReactNode;
+}) {
+	return (
+		<Card className="gap-1 py-4">
+			<CardContent className="space-y-1">
+				<div className="text-sm text-muted-foreground">{label}</div>
+				<div className="text-2xl font-semibold tracking-tight">{value}</div>
+				{note ? (
+					<div className="text-xs text-muted-foreground">{note}</div>
+				) : null}
+			</CardContent>
+		</Card>
+	);
+}
 
 export function ReviewPage() {
-	const [version, setVersion] = useState<Version>("v1");
-	const review = reviews[version];
-	const { rows, orphans, totals } = review;
+	const { summary, detail, invoiceId } = route.useLoaderData();
+	const v = route.useSearch().v ?? "v1";
+	const navigate = route.useNavigate();
+	const { totals, currency } = summary;
 
-	const [selectedId, setSelectedId] = useState<string>(
-		() =>
-			rows.find((r) => r.status === "flagged")?.invoice.id ??
-			rows[0]?.invoice.id ??
-			"",
-	);
-	const [approvals, setApprovals] = useState<Approval[]>([]);
-	const [edits, setEdits] = useState<Record<string, string>>({});
-	const [filter, setFilter] = useState<ReviewStatus | "all">("flagged");
-
-	useEffect(() => setApprovals(loadApprovals()), []);
-
-	const approvedIds = useMemo(
-		() => new Set(approvals.map((a) => a.invoiceId)),
-		[approvals],
-	);
-	const counts = useMemo(
-		() => ({
-			all: rows.length,
-			flagged: rows.filter((r) => r.status === "flagged").length,
-			unpriced: rows.filter((r) => r.status === "unpriced").length,
-			clean: rows.filter((r) => r.status === "clean").length,
-		}),
-		[rows],
-	);
-	const visible = rows
-		.filter((r) => filter === "all" || r.status === filter)
-		.sort((a, b) => b.impact.minor - a.impact.minor);
-	const selected = rows.find((r) => r.invoice.id === selectedId);
-
-	function approve(r: InvoiceReview, draft: string) {
-		const next: Approval[] = [
-			...approvals,
-			{
-				invoiceId: r.invoice.id,
-				at: new Date().toISOString(),
-				amountMinor: r.impact.minor,
-				currency: r.impact.currency,
-				draft,
-			},
-		];
-		setApprovals(next);
-		saveApprovals(next);
-	}
+	const setVersion = (next: AgentVersion) =>
+		navigate({ search: (s) => ({ ...s, v: next }) });
+	const select = (id: string) =>
+		navigate({ search: (s) => ({ ...s, invoice: id }) });
 
 	return (
-		<PageBody>
-			<div className="mx-auto w-full max-w-6xl space-y-10 py-2">
-				<Hero
-					version={version}
-					onVersion={setVersion}
-					totals={totals}
-				/>
-
-				<div className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-					<section aria-label="Invoices" className="space-y-5">
-						<div className="rounded-3xl bg-gradient-to-br from-chart-1 to-chart-5 p-6 text-primary-foreground shadow-lg">
-							<div className="flex items-baseline justify-between gap-3">
-								<h2 className="text-base font-semibold">Cash flow</h2>
-								<ul className="flex gap-4 text-xs text-primary-foreground/80">
-									<li className="flex items-center gap-1.5">
-										<span aria-hidden className="size-2 rounded-full bg-primary-foreground" />
-										Bills in
-									</li>
-									<li className="flex items-center gap-1.5">
-										<span aria-hidden className="size-2 rounded-full bg-primary-foreground/50" />
-										Paid out
-									</li>
-								</ul>
-							</div>
-							<div className="mt-3">
-								<CashflowChart data={cashflow} />
-							</div>
-						</div>
-						<div
-							role="tablist"
-							aria-label="Filter invoices"
-							className="flex gap-1 rounded-xl bg-muted p-1"
+		<>
+			<PageHeader
+				title="Invoice review"
+				description="Northfield Unified School District food service (synthetic data). Code finds and prices every problem; the agent explains it and drafts the email; you approve."
+			>
+				<fieldset className="flex items-center gap-1 rounded-lg border p-1">
+					<legend className="sr-only">Agent version</legend>
+					{(["v1", "v2"] as const).map((ver) => (
+						<Button
+							key={ver}
+							size="sm"
+							variant={v === ver ? "default" : "ghost"}
+							onClick={() => setVersion(ver)}
 						>
-							{FILTERS.map((f) => (
-								<button
-									key={f.id}
-									type="button"
-									role="tab"
-									aria-selected={filter === f.id}
-									onClick={() => setFilter(f.id)}
-									className={cn(
-										"flex-1 rounded-lg px-2 py-1.5 text-center text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-										filter === f.id &&
-											"bg-primary font-medium text-primary-foreground",
-									)}
-								>
-									{f.label}{" "}
-									<span className="tabular-nums text-muted-foreground">
-										{counts[f.id]}
-									</span>
-								</button>
-							))}
-						</div>
-						<ul className="max-h-[30rem] divide-y overflow-y-auto rounded-2xl bg-card shadow-sm ring-1 ring-border">
-							{visible.map((r) => {
-								const done = approvedIds.has(r.invoice.id);
-								return (
-									<li key={r.invoice.id}>
-										<button
-											type="button"
-											onClick={() => setSelectedId(r.invoice.id)}
-											aria-current={selectedId === r.invoice.id}
-											className={cn(
-												"flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-												selectedId === r.invoice.id && "bg-accent",
-											)}
-										>
-											<span
-												aria-hidden
+							Agent {ver}
+						</Button>
+					))}
+				</fieldset>
+			</PageHeader>
+			<PageBody className="space-y-6">
+				<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+					<Stat
+						label="Invoices audited"
+						value={`${totals.run} / ${totals.invoices}`}
+						note={`Latest ${v} run per invoice`}
+					/>
+					<Stat
+						label="Recoverable"
+						value={money(totals.recoverableMinor, currency)}
+						note={`${totals.flagged} flagged invoices, plus ${money(totals.orphanMinor, currency)} in payments with no invoice`}
+					/>
+					<Stat label="Flagged invoices" value={String(totals.flagged)} />
+					<Stat
+						label="Runs with failed tool calls"
+						value={String(totals.failedRuns)}
+						note={
+							totals.failedRuns > 0
+								? "See the root cause below"
+								: "Every tool call succeeded"
+						}
+					/>
+				</div>
+
+				<FailuresPanel summary={summary} />
+
+				<div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+					<Card className="gap-4">
+						<CardHeader>
+							<CardTitle>Invoices</CardTitle>
+							<CardDescription>
+								All amounts come from code, never from the model.
+							</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<ul className="max-h-[34rem] divide-y overflow-y-auto rounded-md border">
+								{summary.invoices.map((r) => {
+									const st = rowStatus(r);
+									return (
+										<li key={r.id}>
+											<button
+												type="button"
+												onClick={() => select(r.id)}
 												className={cn(
-													"size-2 shrink-0 rounded-full",
-													done ? "bg-info" : STATUS_DOT[r.status],
-												)}
-											/>
-											<span className="min-w-0 flex-1">
-												<span className="block truncate text-sm font-medium">
-													{r.invoice.vendor}
-												</span>
-												<span className="block truncate text-xs text-muted-foreground">
-													{r.invoice.invoiceNumber}
-													{done ? " · Approved" : ""}
-												</span>
-											</span>
-											<span
-												className={cn(
-													"shrink-0 text-sm tabular-nums",
-													r.impact.minor > 0
-														? "font-medium"
-														: "text-muted-foreground",
+													"flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
+													invoiceId === r.id && "bg-accent",
 												)}
 											>
-												{r.impact.minor > 0
-													? usd(r.impact.minor)
-													: STATUS_TEXT[r.status]}
-											</span>
-										</button>
-									</li>
-								);
-							})}
-							{visible.length === 0 ? (
-								<li className="py-10 text-center text-sm text-muted-foreground">
-									Nothing here.
-								</li>
-							) : null}
-						</ul>
-					</section>
+												<span className="min-w-0">
+													<span className="block truncate font-medium">
+														{r.invoiceNumber}
+													</span>
+													<span className="block truncate text-xs text-muted-foreground">
+														{r.vendor}
+													</span>
+												</span>
+												<span className="flex shrink-0 items-center gap-2">
+													{(r.run?.totalMinor ?? 0) > 0 ? (
+														<span className="text-xs font-medium">
+															{money(r.run?.totalMinor ?? 0, currency)}
+														</span>
+													) : null}
+													<Badge variant={st.variant}>{st.label}</Badge>
+												</span>
+											</button>
+										</li>
+									);
+								})}
+							</ul>
+						</CardContent>
+					</Card>
 
-					{selected ? (
-						<InvoiceDetail
-							key={`${version}-${selected.invoice.id}`}
-							r={selected}
-							version={version}
-							approved={approvals.find(
-								(a) => a.invoiceId === selected.invoice.id,
-							)}
-							draft={edits[selected.invoice.id] ?? disputeDraft(selected)}
-							onDraft={(text) =>
-								setEdits((e) => ({ ...e, [selected.invoice.id]: text }))
-							}
-							onApprove={(text) => approve(selected, text)}
+					{detail ? (
+						<InvoicePanel
+							key={`${detail.invoice.id}-${v}-${detail.run?.id ?? "none"}`}
+							detail={detail}
+							version={v}
 						/>
 					) : null}
 				</div>
 
-				{orphans.length > 0 ? (
-					<section aria-label="Payments with no invoice" className="space-y-3">
-						<div>
-							<h2 className="text-base font-semibold">Paid with no invoice</h2>
-							<p className="text-sm text-muted-foreground">
-								Money left the account with no matching bill on file. Check
-								these before the next payment run.
-							</p>
-						</div>
-						<ul className="divide-y border-y text-sm">
-							{orphans.map((f) => (
-								<li
-									key={f.paymentId}
-									className="flex items-start justify-between gap-4 py-3"
-								>
-									<span className="text-muted-foreground">{f.detail}</span>
-									<span className="shrink-0 font-medium tabular-nums">
-										{usd(f.impactMinor, f.currency)}
-									</span>
-								</li>
-							))}
-						</ul>
-					</section>
+				{summary.orphans.length > 0 ? (
+					<Card className="gap-4">
+						<CardHeader>
+							<CardTitle>Payments with no invoice</CardTitle>
+							<CardDescription>
+								Money that left with no matching invoice on file. Found by code
+								across all payments.
+							</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<ul className="divide-y rounded-md border text-sm">
+								{summary.orphans.map((f) => (
+									<li
+										key={f.paymentId}
+										className="flex items-start justify-between gap-4 px-3 py-2"
+									>
+										<span>{f.detail}</span>
+										<span className="shrink-0 font-medium">
+											{money(f.impactMinor, f.currency)}
+										</span>
+									</li>
+								))}
+							</ul>
+						</CardContent>
+					</Card>
 				) : null}
-
-				<p className="text-xs text-muted-foreground">
-					Demo data: a fictional district with made-up vendors and invoices.
-					Every amount is calculated by code, never by the AI. Nothing is sent
-					to a vendor until you approve it.
-				</p>
-			</div>
-		</PageBody>
+			</PageBody>
+		</>
 	);
 }
 
-function Hero({
-	version,
-	onVersion,
-	totals,
-}: {
-	version: Version;
-	onVersion: (v: Version) => void;
-	totals: (typeof reviews)["v1"]["totals"];
-}) {
-	const total = totals.recoverable.minor;
+function FailuresPanel({ summary }: { summary: ReviewSummary }) {
+	const { failures, version } = summary;
+	if (failures.failedRuns === 0) return null;
 	return (
-		<header className="space-y-6">
-			<div className="flex flex-wrap items-start justify-between gap-4">
-				<div>
-					<p className="text-sm text-muted-foreground">
-						Northfield Unified School District · {totals.invoices} invoices
-						checked
-					</p>
-				</div>
-				<div
-					role="radiogroup"
-					aria-label="How prices are matched"
-					className="inline-flex rounded-full border p-1 text-sm"
-				>
-					{(
-						[
-							["v1", "Exact match"],
-							["v2", "Smart match"],
-						] as const
-					).map(([v, label]) => (
-						<button
-							key={v}
-							type="button"
-							role="radio"
-							aria-checked={version === v}
-							onClick={() => onVersion(v)}
-							className={cn(
-								"rounded-full px-4 py-1.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-								version === v &&
-									"bg-primary font-medium text-primary-foreground hover:text-primary-foreground",
-							)}
+		<Card className="gap-4 border-warning/40">
+			<CardHeader>
+				<CardTitle className="flex items-center gap-2">
+					<TriangleAlert className="size-4 text-warning" />
+					Why {version} runs fail
+				</CardTitle>
+				<CardDescription>
+					{failures.failedRuns} of {failures.runs} runs had failed tool calls.
+					Grouped by code from the stored tool calls; the same failures show in
+					PRISM.
+				</CardDescription>
+			</CardHeader>
+			<CardContent className="space-y-4 text-sm">
+				{failures.cause ? (
+					<p className="font-medium">{failures.cause}</p>
+				) : null}
+				<ul className="divide-y rounded-md border">
+					{failures.groups.map((g) => (
+						<li
+							key={`${g.tool}:${g.code}`}
+							className="flex items-start justify-between gap-4 px-3 py-2"
 						>
-							{label}
-						</button>
-					))}
-				</div>
-			</div>
-
-			<div>
-				<div className="text-6xl font-semibold tracking-tighter tabular-nums sm:text-7xl">
-					{usd(total)}
-				</div>
-				<p className="mt-2 text-lg text-muted-foreground">
-					lost to billing mistakes. Ready to recover.
-				</p>
-			</div>
-
-			{total > 0 ? (
-				<div className="space-y-3">
-					<div
-						className="flex h-2.5 w-full gap-0.5 overflow-hidden rounded-full"
-						role="img"
-						aria-label="Money lost, by cause"
-					>
-						{totals.byKind.map((k) => (
-							<div
-								key={k.kind}
-								className={cn("h-full", KIND[k.kind].dot)}
-								style={{ flexGrow: k.impact.minor }}
-							/>
-						))}
-					</div>
-					<ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-						{totals.byKind.map((k) => (
-							<li key={k.kind} className="flex items-center gap-2">
-								<span
-									aria-hidden
-									className={cn("size-2 rounded-full", KIND[k.kind].dot)}
-								/>
-								<span className="text-muted-foreground">
-									{KIND[k.kind].label}
+							<span className="min-w-0 space-y-1">
+								<span className="block font-mono text-xs">
+									{g.tool} · {g.code}
 								</span>
-								<span className="font-medium tabular-nums">
-									{usd(k.impact.minor)}
-								</span>
-							</li>
-						))}
-					</ul>
-				</div>
-			) : null}
-
-			<p
-				className={cn(
-					"max-w-2xl text-sm",
-					totals.unpricedLines > 0 ? "text-warning" : "text-muted-foreground",
-				)}
-			>
-				{totals.unpricedLines > 0
-					? `${totals.unpricedLines} invoice lines were never checked: the vendor or unit is spelled differently from the contract. Try Smart match.`
-					: version === "v2"
-						? "Smart match checked every invoice line against the contract."
-						: "Every invoice line was checked."}
-			</p>
-		</header>
-	);
-}
-
-function InvoiceDetail({
-	r,
-	version,
-	approved,
-	draft,
-	onDraft,
-	onApprove,
-}: {
-	r: InvoiceReview;
-	version: Version;
-	approved: Approval | undefined;
-	draft: string;
-	onDraft: (text: string) => void;
-	onApprove: (text: string) => void;
-}) {
-	const { invoice, findings, unpriced, impact, status } = r;
-	return (
-		<section aria-label="Invoice detail" className="space-y-6">
-			<div>
-				<h2 className="text-2xl font-semibold tracking-tight">
-					{invoice.vendor}
-				</h2>
-				<p className="mt-1 text-sm text-muted-foreground">
-					Invoice {invoice.invoiceNumber} · {invoice.issueDate} · billed{" "}
-					<span className="tabular-nums">
-						{usd(
-							toMinor(invoice.statedTotal, invoice.currency).minor,
-							invoice.currency,
-						)}
-					</span>
-				</p>
-			</div>
-
-			{findings.length > 0 ? (
-				<div className="space-y-3">
-					<div className="flex items-baseline justify-between gap-4">
-						<h3 className="text-sm font-medium">What went wrong</h3>
-						<p className="text-sm">
-							<span className="text-muted-foreground">Recover </span>
-							<span className="text-lg font-semibold tabular-nums">
-								{usd(impact.minor, impact.currency)}
-							</span>
-						</p>
-					</div>
-					<ul className="divide-y border-y text-sm">
-						{findings.map((f) => (
-							<li
-								key={`${f.kind}-${f.lineNo ?? "x"}-${f.paymentId ?? "x"}`}
-								className="flex items-start justify-between gap-4 py-3"
-							>
-								<span className="flex gap-3">
-									<span
-										aria-hidden
-										className={cn(
-											"mt-1.5 size-2 shrink-0 rounded-full",
-											KIND[f.kind].dot,
-										)}
-									/>
-									<span>
-										<span className="block font-medium">
-											{KIND[f.kind].label}
-										</span>
-										<span className="block text-muted-foreground">
-											{f.detail}
-										</span>
+								{g.example ? (
+									<span className="block text-muted-foreground">
+										{g.example}
 									</span>
-								</span>
-								<span className="shrink-0 font-medium tabular-nums">
-									{usd(f.impactMinor, f.currency)}
-								</span>
-							</li>
-						))}
-					</ul>
-				</div>
-			) : null}
-
-			{unpriced.length > 0 ? (
-				<div className="space-y-3 rounded-lg bg-warning/10 p-4">
-					<h3 className="text-sm font-medium">
-						{unpriced.length} {unpriced.length === 1 ? "line" : "lines"} not
-						checked
-					</h3>
-					<p className="text-sm text-muted-foreground">
-						Exact match found no contract price for{" "}
-						{unpriced
-							.map((u) => `${u.item} (billed per ${u.unit})`)
-							.join(", ")}
-						. Any overcharge on{" "}
-						{unpriced.length === 1 ? "this line is" : "these lines is"} hidden.
-					</p>
-				</div>
-			) : null}
-
-			{status === "clean" ? (
-				<p className="text-sm text-muted-foreground">
-					Every line matches the contract and the totals add up. Nothing to
-					send.
-				</p>
-			) : null}
-
-			{findings.length > 0 ? (
-				<div className="space-y-3">
-					<div>
-						<h3 className="text-sm font-medium">Message to the vendor</h3>
-						<p className="text-sm text-muted-foreground">
-							Edit it if you like. Nothing is sent until you approve.
-						</p>
-					</div>
-					<Textarea
-						value={approved ? approved.draft : draft}
-						onChange={(e) => onDraft(e.target.value)}
-						readOnly={Boolean(approved)}
-						rows={13}
-						className="font-mono text-xs"
-					/>
-					{approved ? (
-						<div className="flex items-center gap-2 text-sm text-muted-foreground">
-							<Check className="size-4 text-success" />
-							Approved {new Date(approved.at).toLocaleString()} for{" "}
-							{usd(approved.amountMinor, approved.currency)}. The message is now
-							locked.
-						</div>
-					) : (
-						<Button size="lg" onClick={() => onApprove(draft)}>
-							Approve and queue for {invoice.vendor}
-						</Button>
-					)}
-					{version === "v1" && unpriced.length > 0 ? (
-						<p className="text-xs text-muted-foreground">
-							This invoice has unchecked lines. Switch to Smart match before
-							approving.
-						</p>
+								) : null}
+							</span>
+							<Badge variant="warning">{plural(g.runs, "run")}</Badge>
+						</li>
+					))}
+				</ul>
+				<div className="grid gap-4 md:grid-cols-2">
+					{failures.vendorVariants.length > 0 ? (
+						<section className="space-y-2">
+							<h3 className="font-medium">Vendor names on the invoice</h3>
+							<ul className="space-y-1">
+								{failures.vendorVariants.map((vv) => (
+									<li key={vv.printed} className="flex justify-between gap-2">
+										<span>
+											“{vv.printed}”
+											{vv.canonical ? (
+												<span className="text-muted-foreground">
+													{" "}
+													→ {vv.canonical}
+												</span>
+											) : null}
+										</span>
+										<span className="text-muted-foreground">
+											{plural(vv.invoiceIds.length, "invoice")}
+										</span>
+									</li>
+								))}
+							</ul>
+						</section>
+					) : null}
+					{failures.unitVariants.length > 0 ? (
+						<section className="space-y-2">
+							<h3 className="font-medium">Units billed vs the contract</h3>
+							<ul className="space-y-1">
+								{failures.unitVariants.map((u) => (
+									<li
+										key={`${u.item}|${u.billedUnit}`}
+										className="flex justify-between gap-2"
+									>
+										<span>
+											{u.item}: “{u.billedUnit}”
+											<span className="text-muted-foreground">
+												{" "}
+												vs {u.contractUnits.join(" / ")}
+											</span>
+										</span>
+										<span className="text-muted-foreground">
+											{plural(u.invoiceIds.length, "invoice")}
+										</span>
+									</li>
+								))}
+							</ul>
+						</section>
 					) : null}
 				</div>
-			) : null}
-		</section>
+			</CardContent>
+		</Card>
+	);
+}
+
+function InvoicePanel({
+	detail,
+	version,
+}: {
+	detail: InvoiceDetail;
+	version: AgentVersion;
+}) {
+	const router = useRouter();
+	const { invoice, run, draft, approval } = detail;
+	const [running, setRunning] = useState(false);
+
+	async function runNow() {
+		setRunning(true);
+		try {
+			const res = await runAgentOn({
+				data: { invoiceId: invoice.id, version },
+			});
+			if (res.status === "failed")
+				toast.error(`Run failed: ${res.error ?? "unknown error"}`);
+			else toast.success(`Agent ${version} finished`);
+			await router.invalidate();
+		} catch (e) {
+			toast.error(e instanceof Error ? e.message : "Run failed");
+		} finally {
+			setRunning(false);
+		}
+	}
+
+	const total = run?.findings.reduce((n, f) => n + f.impactMinor, 0) ?? 0;
+
+	return (
+		<Card className="gap-4">
+			<CardHeader>
+				<div className="flex flex-wrap items-start justify-between gap-3">
+					<div className="space-y-1.5">
+						<CardTitle>{invoice.invoiceNumber}</CardTitle>
+						<CardDescription>
+							{invoice.vendor} · issued {invoice.issueDate} · stated total{" "}
+							{money(
+								toMinor(invoice.statedTotal, invoice.currency).minor,
+								invoice.currency,
+							)}
+						</CardDescription>
+					</div>
+					<Button onClick={runNow} disabled={running}>
+						{running ? <Loader2 className="animate-spin" /> : <Play />}
+						{running ? "Running… (~10 s)" : `Run agent ${version}`}
+					</Button>
+				</div>
+			</CardHeader>
+			<CardContent className="space-y-4">
+				{!run ? (
+					<p className="text-sm text-muted-foreground">
+						No {version} run for this invoice yet.
+					</p>
+				) : (
+					<>
+						<div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+							<span>{run.model ?? "model unknown"}</span>
+							<span>{run.toolCalls} tool calls</span>
+							<span>{utc(run.startedAt)}</span>
+							{run.prismTraceId ? (
+								<span>
+									PRISM trace{" "}
+									<code className="font-mono">
+										{run.prismTraceId.slice(0, 8)}
+									</code>{" "}
+									· session{" "}
+									<code className="font-mono">{run.id.slice(0, 8)}</code>
+								</span>
+							) : null}
+						</div>
+						<div className="flex flex-wrap gap-1.5">
+							{run.toolLog.map((t, i) => (
+								<Badge
+									// biome-ignore lint/suspicious/noArrayIndexKey: tool calls are ordered and may repeat
+									key={i}
+									variant={t.status === "ok" ? "outline" : "warning"}
+									title={t.errorMessage ?? undefined}
+									className="font-mono"
+								>
+									{t.name}
+									{t.status === "error" ? ` · ${t.errorCode}` : ""}
+								</Badge>
+							))}
+						</div>
+						{run.error ? (
+							<p className="text-sm text-destructive">{run.error}</p>
+						) : null}
+
+						{run.findings.length > 0 ? (
+							<section className="space-y-2">
+								<h3 className="text-sm font-medium">Findings (code)</h3>
+								<ul className="divide-y rounded-md border text-sm">
+									{run.findings.map((f) => (
+										<li
+											key={`${f.kind}-${f.lineNo ?? "x"}-${f.paymentId ?? "x"}`}
+											className="flex items-start justify-between gap-4 px-3 py-2"
+										>
+											<span className="space-y-1">
+												<Badge variant="destructive">
+													{KIND_LABEL[f.kind] ?? f.kind}
+												</Badge>
+												<span className="block text-muted-foreground">
+													{f.detail}
+												</span>
+											</span>
+											<span className="shrink-0 font-medium">
+												{money(f.impactMinor, f.currency)}
+											</span>
+										</li>
+									))}
+								</ul>
+								<div className="flex justify-between text-sm font-medium">
+									<span>Recoverable on this invoice</span>
+									<span>{money(total, invoice.currency)}</span>
+								</div>
+							</section>
+						) : null}
+
+						{run.explanation ? (
+							<section className="space-y-2">
+								<h3 className="flex items-center gap-1.5 text-sm font-medium">
+									<Sparkles className="size-4 text-info" /> Agent's explanation
+								</h3>
+								<p className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
+									{run.explanation}
+								</p>
+							</section>
+						) : null}
+
+						{draft ? <DraftEditor draft={draft} approval={approval} /> : null}
+					</>
+				)}
+			</CardContent>
+		</Card>
+	);
+}
+
+function DraftEditor({
+	draft,
+	approval,
+}: {
+	draft: NonNullable<InvoiceDetail["draft"]>;
+	approval: InvoiceDetail["approval"];
+}) {
+	const router = useRouter();
+	const [subject, setSubject] = useState(draft.subject);
+	const [body, setBody] = useState(draft.body);
+	const [approvedBy, setApprovedBy] = useState("Food Services Director");
+	const [busy, setBusy] = useState(false);
+	const locked = draft.status === "approved";
+	const dirty = subject !== draft.subject || body !== draft.body;
+
+	async function act(fn: () => Promise<unknown>, ok: string) {
+		setBusy(true);
+		try {
+			await fn();
+			toast.success(ok);
+			await router.invalidate();
+		} catch (e) {
+			toast.error(e instanceof Error ? e.message : "Something went wrong");
+		} finally {
+			setBusy(false);
+		}
+	}
+
+	return (
+		<>
+			<Separator />
+			<section className="space-y-3">
+				<div>
+					<h3 className="text-sm font-medium">
+						Dispute email (written by the agent)
+					</h3>
+					<p className="text-xs text-muted-foreground">
+						Amounts were checked against the code's findings before the draft
+						was saved. Nothing is sent without Approve.
+					</p>
+				</div>
+				<div className="space-y-1.5">
+					<Label htmlFor="subject">Subject</Label>
+					<Input
+						id="subject"
+						value={subject}
+						onChange={(e) => setSubject(e.target.value)}
+						readOnly={locked}
+					/>
+				</div>
+				<Textarea
+					aria-label="Email body"
+					value={body}
+					onChange={(e) => setBody(e.target.value)}
+					readOnly={locked}
+					rows={12}
+					className="text-sm"
+				/>
+				{locked && approval ? (
+					<div className="flex items-center gap-2 text-sm text-muted-foreground">
+						<Check className="size-4 text-success" />
+						Approved by {approval.approvedBy} on {utc(approval.approvedAt)} for{" "}
+						{money(approval.totalImpactMinor, approval.currency)}. Logged; the
+						draft is read-only.
+					</div>
+				) : (
+					<div className="flex flex-wrap items-end gap-2">
+						<div className="space-y-1.5">
+							<Label htmlFor="approvedBy">Approved by</Label>
+							<Input
+								id="approvedBy"
+								value={approvedBy}
+								onChange={(e) => setApprovedBy(e.target.value)}
+								className="w-56"
+							/>
+						</div>
+						<Button
+							variant="outline"
+							disabled={busy || !dirty}
+							onClick={() =>
+								act(
+									() =>
+										saveDraft({ data: { draftId: draft.id, subject, body } }),
+									"Draft saved",
+								)
+							}
+						>
+							Save edits
+						</Button>
+						<Button
+							disabled={busy || dirty}
+							title={dirty ? "Save your edits first" : undefined}
+							onClick={() =>
+								act(
+									() => approve({ data: { draftId: draft.id, approvedBy } }),
+									"Approved and logged",
+								)
+							}
+						>
+							Approve {money(draft.totalImpactMinor, draft.currency)} dispute
+						</Button>
+					</div>
+				)}
+			</section>
+		</>
 	);
 }
