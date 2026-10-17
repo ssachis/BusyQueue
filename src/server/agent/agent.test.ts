@@ -235,14 +235,34 @@ describe("runAgent", () => {
 		]);
 	});
 
-	it("refuses versions that don't exist yet", async () => {
+	it("v2 resolves the vendor variant and pack unit, and finds the $72 overcharge", async () => {
 		const { store } = memoryStore();
-		await expect(
-			runAgent(
-				{ invoiceId: "inv-clean", version: "v2" },
-				deps(store, scripted([]).model),
-			),
-		).rejects.toThrow("v2 is not available");
+		const { model } = scripted([
+			{ toolCalls: allChecks("inv-variant") },
+			{
+				toolCalls: [
+					call("save_dispute_draft", {
+						subject: "Invoice SY-1003",
+						body: "Chicken breast was billed at $86.40 per case against the agreed $84.00. Please credit $72.00.",
+					}),
+				],
+			},
+			{ content: "One overcharge, $72.00 recoverable." },
+		]);
+		const result = await runAgent(
+			{ invoiceId: "inv-variant", version: "v2" },
+			deps(store, model),
+		);
+		expect(result.status).toBe("completed");
+		expect(result.unpricedLines).toBe(0);
+		expect(result.toolCalls.every((t) => t.status === "ok")).toBe(true);
+		expect(result.findings[0]).toMatchObject({
+			kind: "overcharge",
+			expected: "84.00",
+			actual: "86.40",
+			impactMinor: 7200,
+		});
+		expect(result.draft?.totalImpactMinor).toBe(7200);
 	});
 });
 
