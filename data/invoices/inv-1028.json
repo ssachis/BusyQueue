@@ -1,0 +1,51 @@
+{
+  "id": "inv-1028",
+  "vendor": "Dairy-Pure",
+  "invoiceNumber": "DP-1028",
+  "issueDate": "2026-09-26",
+  "dueDate": "2026-10-26",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Eggs large",
+      "quantity": "20",
+      "unit": "case",
+      "unitPrice": "31.00",
+      "amount": "620.00"
+    },
+    {
+      "lineNo": 2,
+      "item": "Yogurt cup",
+      "quantity": "60",
+      "unit": "case",
+      "unitPrice": "17.25",
+      "amount": "1035.00"
+    },
+    {
+      "lineNo": 3,
+      "item": "Cheddar shredded",
+      "quantity": "400",
+      "unit": "lb",
+      "unitPrice": "3.60",
+      "amount": "1440.00"
+    },
+    {
+      "lineNo": 4,
+      "item": "Milk skim half-pint",
+      "quantity": "15",
+      "unit": "case",
+      "unitPrice": "9.85",
+      "amount": "147.75"
+    },
+    {
+      "lineNo": 5,
+      "item": "Milk 1% half-pint",
+      "quantity": "10",
+      "unit": "case",
+      "unitPrice": "10.10",
+      "amount": "101.00"
+    }
+  ],
+  "statedTotal": "3343.75"
+}

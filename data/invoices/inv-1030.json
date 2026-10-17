@@ -1,0 +1,43 @@
+{
+  "id": "inv-1030",
+  "vendor": "Dairy Pure",
+  "invoiceNumber": "DP-1030",
+  "issueDate": "2026-10-01",
+  "dueDate": "2026-10-31",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Milk 1% half-pint",
+      "quantity": "12",
+      "unit": "case",
+      "unitPrice": "9.85",
+      "amount": "118.20"
+    },
+    {
+      "lineNo": 2,
+      "item": "Milk skim half-pint",
+      "quantity": "40",
+      "unit": "case",
+      "unitPrice": "9.85",
+      "amount": "394.00"
+    },
+    {
+      "lineNo": 3,
+      "item": "Cheddar shredded",
+      "quantity": "150",
+      "unit": "lb",
+      "unitPrice": "3.60",
+      "amount": "540.00"
+    },
+    {
+      "lineNo": 4,
+      "item": "Eggs large",
+      "quantity": "30",
+      "unit": "case",
+      "unitPrice": "31.00",
+      "amount": "930.00"
+    }
+  ],
+  "statedTotal": "1982.20"
+}

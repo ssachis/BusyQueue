@@ -1,0 +1,43 @@
+{
+  "id": "inv-1024",
+  "vendor": "Harbor Foods, Inc.",
+  "invoiceNumber": "HF-1024",
+  "issueDate": "2026-09-19",
+  "dueDate": "2026-10-19",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Whole grain bread",
+      "quantity": "12",
+      "unit": "Case",
+      "unitPrice": "16.40",
+      "amount": "196.80"
+    },
+    {
+      "lineNo": 2,
+      "item": "Ground beef 85/15",
+      "quantity": "250",
+      "unit": "lbs",
+      "unitPrice": "3.45",
+      "amount": "862.50"
+    },
+    {
+      "lineNo": 3,
+      "item": "Brown rice",
+      "quantity": "7",
+      "unit": "bags",
+      "unitPrice": "14.20",
+      "amount": "99.40"
+    },
+    {
+      "lineNo": 4,
+      "item": "Chicken breast",
+      "quantity": "3",
+      "unit": "case",
+      "unitPrice": "84.00",
+      "amount": "252.00"
+    }
+  ],
+  "statedTotal": "1410.70"
+}

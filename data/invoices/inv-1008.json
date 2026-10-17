@@ -1,0 +1,35 @@
+{
+  "id": "inv-1008",
+  "vendor": "Dairy Pure",
+  "invoiceNumber": "DP-1008",
+  "issueDate": "2026-08-17",
+  "dueDate": "2026-09-16",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Milk skim half-pint",
+      "quantity": "12",
+      "unit": "case",
+      "unitPrice": "9.85",
+      "amount": "118.20"
+    },
+    {
+      "lineNo": 2,
+      "item": "Yogurt cup",
+      "quantity": "10",
+      "unit": "case",
+      "unitPrice": "17.25",
+      "amount": "172.50"
+    },
+    {
+      "lineNo": 3,
+      "item": "Milk 1% half-pint",
+      "quantity": "24",
+      "unit": "case",
+      "unitPrice": "9.85",
+      "amount": "236.40"
+    }
+  ],
+  "statedTotal": "527.10"
+}

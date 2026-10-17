@@ -2,8 +2,8 @@
 
 The invoicing final boss. Two halves that share one money core:
 
-1. **BusyQ agent (hackathon, build first).** An AI agent that audits restaurant
-   vendor invoices and payments, finds money lost to mistakes, and drafts the
+1. **BusyQ agent (hackathon, build first).** An AI agent that audits school-district
+   food-service vendor invoices and payments, finds money lost to mistakes, and drafts the
    fix. Track: Money Operations. Judged mainly on **PRISM** (observing and fixing
    the agent) and **Nicrron** (where every model call runs).
 2. **Invoicing suite (after the demo).** Create, issue, and track six document
@@ -11,6 +11,15 @@ The invoicing final boss. Two halves that share one money core:
 3. **Inbox, projections, and reminders.** Connect email so incoming and outgoing
    invoices and contracts arrive on their own, project cash and month-over-month
    trends, and remind the owner well before a contract or tender lapses.
+
+**First customer: school districts.** The food-service office of a K-12 district,
+buying for several school kitchens from a few contract vendors (produce, dairy,
+general foodservice). Why schools first: prices are fixed by bid or contract, so
+"invoice vs agreed price" is objective and auditable; the money is public, so an
+audit trail and owner approval matter; and the overbilling evidence we cite
+comes mostly from college foodservice. Restaurants and other multi-site
+operators stay on the roadmap and need different data, not different code. The
+sample district is fictional (Northfield Unified School District).
 
 BusyQ checks money coming *in* (vendor bills); the suite produces documents going
 *out*; the inbox feeds both and watches what's coming. All three use the same
@@ -112,13 +121,13 @@ Phases run in order. Every change ends green on `bun run typecheck`,
      metadata. Don't guess field names.
 3. **Synthetic data.**
    - `scripts/generate-data.ts`, seeded and deterministic, writes to `data/`:
-     - `price_list.csv` (vendor, item, unit, agreed price, pack size)
-     - 30–50 `invoices/*.json` with planted mistakes (overcharge, duplicate
-       line, wrong total)
-     - `payments.csv` with one duplicate payment and one with no invoice
+     - `price_list.csv` (vendor, item, unit, agreed unit price, pack size)
+     - 30–50 `invoices/*.json` for school kitchens with planted mistakes
+       (overcharge, duplicate line, wrong total)
+     - `payments.csv` with duplicate payments and payments with no invoice
      - `answer_key.csv`
-   - About 10 invoices use vendor-name and unit variants ("SYSCO Foods" vs
-     "Sysco", "case" vs "lb"), so v1 fails the same way repeatedly.
+   - About 10 invoices use vendor-name and unit variants ("HARBOR FOODS INC" vs
+     "Harbor Foods", "case" vs "lb"), so v1 fails the same way repeatedly.
 4. **Rules engine (no AI).** `src/lib/rules/`:
    - `lookupPrices`: v1 matches exact strings only, on purpose
    - `compareLines`, `checkInvoice`, `checkPayments`, `calculateImpact`

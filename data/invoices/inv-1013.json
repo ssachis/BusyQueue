@@ -1,0 +1,43 @@
+{
+  "id": "inv-1013",
+  "vendor": "Valley Fresh Produce",
+  "invoiceNumber": "VF-1013",
+  "issueDate": "2026-08-27",
+  "dueDate": "2026-09-26",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Apples",
+      "quantity": "30",
+      "unit": "case",
+      "unitPrice": "24.00",
+      "amount": "720.00"
+    },
+    {
+      "lineNo": 2,
+      "item": "Romaine lettuce",
+      "quantity": "60",
+      "unit": "case",
+      "unitPrice": "18.50",
+      "amount": "1110.00"
+    },
+    {
+      "lineNo": 3,
+      "item": "Oranges",
+      "quantity": "40",
+      "unit": "case",
+      "unitPrice": "27.30",
+      "amount": "1092.00"
+    },
+    {
+      "lineNo": 4,
+      "item": "Bananas",
+      "quantity": "1200",
+      "unit": "lb",
+      "unitPrice": "0.62",
+      "amount": "744.00"
+    }
+  ],
+  "statedTotal": "3666.00"
+}

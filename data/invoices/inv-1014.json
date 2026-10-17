@@ -1,0 +1,43 @@
+{
+  "id": "inv-1014",
+  "vendor": "Valley Fresh Produce",
+  "invoiceNumber": "VF-1014",
+  "issueDate": "2026-08-30",
+  "dueDate": "2026-09-29",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Apples",
+      "quantity": "10",
+      "unit": "case",
+      "unitPrice": "24.00",
+      "amount": "240.00"
+    },
+    {
+      "lineNo": 2,
+      "item": "Broccoli",
+      "quantity": "24",
+      "unit": "case",
+      "unitPrice": "22.30",
+      "amount": "535.20"
+    },
+    {
+      "lineNo": 3,
+      "item": "Oranges",
+      "quantity": "12",
+      "unit": "case",
+      "unitPrice": "26.80",
+      "amount": "321.60"
+    },
+    {
+      "lineNo": 4,
+      "item": "Carrots",
+      "quantity": "150",
+      "unit": "lb",
+      "unitPrice": "0.78",
+      "amount": "117.00"
+    }
+  ],
+  "statedTotal": "1213.80"
+}

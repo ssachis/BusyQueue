@@ -1,0 +1,41 @@
+invoice_id,vendor,planted_kind,name_variant,unit_variant,paid
+inv-1001,Harbor Foods,overcharge,1,0,1
+inv-1002,Valley Fresh Produce,clean,0,0,1
+inv-1003,Valley Fresh Produce,overcharge,0,0,1
+inv-1004,Valley Fresh Produce,overcharge,1,1,1
+inv-1005,Valley Fresh Produce,overcharge,1,1,1
+inv-1006,Harbor Foods,wrong_total,1,0,1
+inv-1007,Valley Fresh Produce,clean,1,1,1
+inv-1008,Dairy Pure,clean,0,0,1
+inv-1009,Valley Fresh Produce,clean,0,0,1
+inv-1010,Dairy Pure,duplicate_line,0,0,1
+inv-1011,Harbor Foods,clean,0,0,1
+inv-1012,Valley Fresh Produce,clean,1,1,1
+inv-1013,Valley Fresh Produce,overcharge,0,0,1
+inv-1014,Valley Fresh Produce,clean,0,0,1
+inv-1015,Valley Fresh Produce,wrong_total,0,0,1
+inv-1016,Dairy Pure,clean_unpaid,0,0,0
+inv-1017,Dairy Pure,clean,0,0,1
+inv-1018,Valley Fresh Produce,clean,0,0,1
+inv-1019,Dairy Pure,clean,0,0,1
+inv-1020,Dairy Pure,duplicate_line,1,0,1
+inv-1021,Harbor Foods,clean,0,0,1
+inv-1022,Harbor Foods,duplicate_line,1,1,1
+inv-1023,Dairy Pure,overcharge,1,1,1
+inv-1024,Harbor Foods,clean,1,1,1
+inv-1025,Dairy Pure,duplicate_payment,0,0,1
+inv-1026,Dairy Pure,duplicate_payment,1,1,1
+inv-1027,Valley Fresh Produce,duplicate_payment,0,0,1
+inv-1028,Dairy Pure,overcharge,1,0,1
+inv-1029,Harbor Foods,overcharge,0,0,1
+inv-1030,Dairy Pure,clean,0,0,1
+inv-1031,Valley Fresh Produce,duplicate_line,0,0,1
+inv-1032,Harbor Foods,clean,0,0,1
+inv-1033,Harbor Foods,wrong_total,1,1,1
+inv-1034,Harbor Foods,clean,0,0,1
+inv-1035,Valley Fresh Produce,clean_unpaid,0,0,0
+inv-1036,Harbor Foods,clean,0,0,1
+inv-1037,Dairy Pure,clean_unpaid,0,1,0
+inv-1038,Valley Fresh Produce,clean,0,0,1
+inv-1039,Harbor Foods,clean,0,0,1
+inv-1040,Valley Fresh Produce,clean,0,0,1

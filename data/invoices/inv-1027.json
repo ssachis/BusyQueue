@@ -1,0 +1,43 @@
+{
+  "id": "inv-1027",
+  "vendor": "Valley Fresh Produce",
+  "invoiceNumber": "VF-1027",
+  "issueDate": "2026-09-24",
+  "dueDate": "2026-10-24",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Broccoli",
+      "quantity": "30",
+      "unit": "case",
+      "unitPrice": "22.30",
+      "amount": "669.00"
+    },
+    {
+      "lineNo": 2,
+      "item": "Oranges",
+      "quantity": "15",
+      "unit": "case",
+      "unitPrice": "26.80",
+      "amount": "402.00"
+    },
+    {
+      "lineNo": 3,
+      "item": "Romaine lettuce",
+      "quantity": "15",
+      "unit": "case",
+      "unitPrice": "18.50",
+      "amount": "277.50"
+    },
+    {
+      "lineNo": 4,
+      "item": "Apples",
+      "quantity": "15",
+      "unit": "case",
+      "unitPrice": "24.00",
+      "amount": "360.00"
+    }
+  ],
+  "statedTotal": "1708.50"
+}

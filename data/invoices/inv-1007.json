@@ -1,0 +1,35 @@
+{
+  "id": "inv-1007",
+  "vendor": "VALLEY FRESH PRODUCE LLC",
+  "invoiceNumber": "VF-1007",
+  "issueDate": "2026-08-15",
+  "dueDate": "2026-09-14",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Carrots",
+      "quantity": "24",
+      "unit": "case",
+      "unitPrice": "39.00",
+      "amount": "936.00"
+    },
+    {
+      "lineNo": 2,
+      "item": "Apples",
+      "quantity": "30",
+      "unit": "Case",
+      "unitPrice": "24.00",
+      "amount": "720.00"
+    },
+    {
+      "lineNo": 3,
+      "item": "Oranges",
+      "quantity": "10",
+      "unit": "CS",
+      "unitPrice": "26.80",
+      "amount": "268.00"
+    }
+  ],
+  "statedTotal": "1924.00"
+}

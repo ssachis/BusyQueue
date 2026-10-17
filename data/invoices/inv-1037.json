@@ -1,0 +1,35 @@
+{
+  "id": "inv-1037",
+  "vendor": "Dairy Pure",
+  "invoiceNumber": "DP-1037",
+  "issueDate": "2026-10-15",
+  "dueDate": "2026-11-14",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Yogurt cup",
+      "quantity": "10",
+      "unit": "CS",
+      "unitPrice": "17.25",
+      "amount": "172.50"
+    },
+    {
+      "lineNo": 2,
+      "item": "Eggs large",
+      "quantity": "24",
+      "unit": "CS",
+      "unitPrice": "31.00",
+      "amount": "744.00"
+    },
+    {
+      "lineNo": 3,
+      "item": "Milk 1% half-pint",
+      "quantity": "24",
+      "unit": "CS",
+      "unitPrice": "9.85",
+      "amount": "236.40"
+    }
+  ],
+  "statedTotal": "1152.90"
+}

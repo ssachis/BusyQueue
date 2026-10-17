@@ -1,0 +1,43 @@
+{
+  "id": "inv-1033",
+  "vendor": "Harbor Foods, Inc.",
+  "invoiceNumber": "HF-1033",
+  "issueDate": "2026-10-06",
+  "dueDate": "2026-11-05",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Pasta penne",
+      "quantity": "10",
+      "unit": "CS",
+      "unitPrice": "21.75",
+      "amount": "217.50"
+    },
+    {
+      "lineNo": 2,
+      "item": "Brown rice",
+      "quantity": "9",
+      "unit": "BG",
+      "unitPrice": "14.20",
+      "amount": "127.80"
+    },
+    {
+      "lineNo": 3,
+      "item": "Chicken breast",
+      "quantity": "3",
+      "unit": "case",
+      "unitPrice": "84.00",
+      "amount": "252.00"
+    },
+    {
+      "lineNo": 4,
+      "item": "Ground beef 85/15",
+      "quantity": "15",
+      "unit": "case",
+      "unitPrice": "138.00",
+      "amount": "2070.00"
+    }
+  ],
+  "statedTotal": "2742.30"
+}

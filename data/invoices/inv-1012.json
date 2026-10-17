@@ -1,0 +1,51 @@
+{
+  "id": "inv-1012",
+  "vendor": "Valley Fresh",
+  "invoiceNumber": "VF-1012",
+  "issueDate": "2026-08-25",
+  "dueDate": "2026-09-24",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Romaine lettuce",
+      "quantity": "60",
+      "unit": "Case",
+      "unitPrice": "18.50",
+      "amount": "1110.00"
+    },
+    {
+      "lineNo": 2,
+      "item": "Carrots",
+      "quantity": "24",
+      "unit": "case",
+      "unitPrice": "39.00",
+      "amount": "936.00"
+    },
+    {
+      "lineNo": 3,
+      "item": "Oranges",
+      "quantity": "24",
+      "unit": "Case",
+      "unitPrice": "26.80",
+      "amount": "643.20"
+    },
+    {
+      "lineNo": 4,
+      "item": "Bananas",
+      "quantity": "1200",
+      "unit": "lbs",
+      "unitPrice": "0.62",
+      "amount": "744.00"
+    },
+    {
+      "lineNo": 5,
+      "item": "Broccoli",
+      "quantity": "15",
+      "unit": "CS",
+      "unitPrice": "22.30",
+      "amount": "334.50"
+    }
+  ],
+  "statedTotal": "3767.70"
+}
