@@ -9,7 +9,7 @@ import {
 	checkInvoice,
 	checkInvoicePayments,
 	compareLines,
-	lookupPrices,
+	LOOKUPS,
 	scoreRun,
 } from "#/lib/rules/index.ts";
 import {
@@ -101,15 +101,7 @@ export function runWithRules(
 	data: RulesData,
 	version: AgentVersion,
 ): RunOutcome {
-	if (version !== "v1") {
-		return failedOutcome(
-			invoice.id,
-			repeat,
-			"version_unavailable",
-			"Only v1 exists in rules mode until the v2 lookup (#9) merges.",
-		);
-	}
-	const compared = compareLines(invoice, data.prices, lookupPrices);
+	const compared = compareLines(invoice, data.prices, LOOKUPS[version]);
 	return {
 		invoiceId: invoice.id,
 		repeat,
