@@ -164,7 +164,7 @@ export function ReviewPage() {
 											<span className="min-w-0">
 												<span className="block truncate font-medium">{r.invoice.invoiceNumber}</span>
 												<span className="block truncate text-xs text-muted-foreground">
-													{r.invoice.vendor} · {r.invoice.site}
+													{r.invoice.vendor}
 												</span>
 											</span>
 											<span className="flex shrink-0 items-center gap-2">
@@ -248,7 +248,7 @@ function InvoiceDetail({
 					<Badge variant={STATUS[status].variant}>{STATUS[status].label}</Badge>
 				</CardTitle>
 				<CardDescription>
-					{invoice.vendor} · {invoice.site} · issued {invoice.issueDate} · stated total{" "}
+					{invoice.vendor} · issued {invoice.issueDate} · stated total{" "}
 					{usd(toMinor(invoice.statedTotal, invoice.currency).minor, invoice.currency)}
 				</CardDescription>
 			</CardHeader>

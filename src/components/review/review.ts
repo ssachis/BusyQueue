@@ -101,11 +101,11 @@ export function disputeDraft(
 		(f) => `- ${f.detail} (${money(f.impactMinor, f.currency)})`,
 	);
 	return [
-		`Subject: Invoice ${invoice.invoiceNumber}: billing discrepancies for ${invoice.site}`,
+		`Subject: Invoice ${invoice.invoiceNumber}: billing discrepancies`,
 		"",
 		`Hello ${invoice.vendor},`,
 		"",
-		`While reconciling invoice ${invoice.invoiceNumber} (${invoice.issueDate}) for ${invoice.site}, we found the following:`,
+		`While reconciling invoice ${invoice.invoiceNumber} (${invoice.issueDate}), we found the following:`,
 		"",
 		...lines,
 		"",
