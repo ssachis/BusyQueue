@@ -84,6 +84,14 @@ const serverEnvSchema = z.object({
 		"openai/gpt-5.4-mini",
 		"anthropic/claude-haiku-5-5",
 	]),
+	// ── AI import of the business's own documents (/import-document) ──
+	/** Vision model for photos and scans of quotes, invoices, receipts… */
+	DOC_IMPORT_MODEL: z.string().min(1).default("anthropic/claude-sonnet-5-5"),
+	/** Comma list Nicrron cascades to, in order, when DOC_IMPORT_MODEL fails. */
+	DOC_IMPORT_FALLBACK_MODELS: commaList.default([
+		"openai/gpt-5.4",
+	/** Comma list for PDFs, primary first; only models that read `file` parts. */
+	DOC_IMPORT_PDF_MODELS: commaList.default([
 
 	// ── PRISM tracing (disabled when the key is unset) ──
 	PRISMTRACE_API_KEY: optionalString,

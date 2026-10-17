@@ -7,6 +7,7 @@ import * as catalog from "./schema/catalog.ts";
 import * as clients from "./schema/clients.ts";
 import * as contracts from "./schema/contracts.ts";
 import * as documentLinks from "./schema/document-links.ts";
+import * as docImports from "./schema/doc-imports.ts";
 import * as documentPayments from "./schema/document-payments.ts";
 import * as documents from "./schema/documents.ts";
 import * as imports from "./schema/imports.ts";
@@ -26,6 +27,7 @@ export const schema = {
 	...clients,
 	...catalog,
 	...reminders,
+	...docImports,
 };
 
 /** Drizzle client on the Worker's D1 binding. Server-only. */
