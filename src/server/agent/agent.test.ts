@@ -186,14 +186,14 @@ describe("runAgent", () => {
 		expect(finished[0]?.status).toBe("failed");
 	});
 
-	it("refuses versions that don't exist yet", async () => {
+	it("refuses versions that don't exist", async () => {
 		const { store } = memoryStore();
 		await expect(
 			runAgent(
-				{ invoiceId: "inv-clean", version: "v2" },
+				{ invoiceId: "inv-clean", version: "v3" as never },
 				deps(store, scripted([]).model),
 			),
-		).rejects.toThrow("v2 is not available");
+		).rejects.toThrow("v3 is not available");
 	});
 });
 
