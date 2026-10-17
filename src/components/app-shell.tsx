@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { type ReactNode, useState } from "react";
+import { Wordmark } from "#/components/logo.tsx";
 import { ThemeToggle } from "#/components/theme-toggle.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import { mainNav } from "#/config/nav.ts";
@@ -9,8 +10,12 @@ import { cn } from "#/lib/utils.ts";
 
 function Brand() {
 	return (
-		<Link to="/" className="font-semibold tracking-tight">
-			{siteConfig.name}
+		<Link
+			to="/"
+			aria-label={siteConfig.name}
+			className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+		>
+			<Wordmark />
 		</Link>
 	);
 }
@@ -24,13 +29,13 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 					to={to}
 					activeOptions={{ exact }}
 					onClick={onNavigate}
-					className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+					className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-[15px] text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
 					activeProps={{
 						className:
-							"bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+							"bg-sidebar-accent font-medium text-sidebar-accent-foreground shadow-sm ring-1 ring-sidebar-border",
 					}}
 				>
-					<Icon className="size-4 shrink-0" />
+					<Icon className="size-[18px] shrink-0" />
 					{label}
 				</Link>
 			))}
@@ -45,15 +50,22 @@ export function AppShell({ children }: { children: ReactNode }) {
 	return (
 		<div className="flex min-h-screen flex-col md:flex-row">
 			{/* Desktop sidebar */}
-			<aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
-				<div className="px-5 py-5">
+			<aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-hidden bg-gradient-to-b from-sidebar to-sidebar-accent text-sidebar-foreground md:flex">
+				<div
+					aria-hidden
+					className="pointer-events-none absolute -top-24 -left-24 size-72 rounded-full bg-chart-1/40 blur-3xl"
+				/>
+				<div className="relative px-5 pt-7 pb-6">
 					<Brand />
 				</div>
-				<div className="flex-1 px-3 py-2">
+				<div className="relative flex-1 px-3 py-2">
 					<NavLinks />
 				</div>
-				<div className="px-3 py-4">
-					<ThemeToggle />
+				<div className="relative flex items-center justify-between px-5 py-5">
+					<span className="rounded-full bg-sidebar-foreground/10 px-3 py-1 text-xs text-sidebar-foreground/80">
+						Demo data
+					</span>
+					<ThemeToggle className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
 				</div>
 			</aside>
 
@@ -90,7 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 				/>
 				<div
 					className={cn(
-						"absolute top-0 left-0 flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-xl transition-transform duration-300 ease-out",
+						"absolute top-0 left-0 flex h-full w-64 flex-col bg-gradient-to-b from-sidebar to-sidebar-accent text-sidebar-foreground shadow-xl transition-transform duration-300 ease-out",
 						open ? "translate-x-0" : "-translate-x-full",
 					)}
 				>
