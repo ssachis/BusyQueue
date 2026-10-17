@@ -66,7 +66,7 @@ export interface DocumentPaymentRow {
 /** What the page shows for an item id, and where it links. */
 export interface ItemLabel {
 	label: string;
-	/** Vendor bill to open on the review page (`/?v=v2&invoice=<id>`); null otherwise. */
+	/** Vendor bill to open on the review page (`/review?invoice=<id>`); null otherwise. */
 	reviewInvoiceId: string | null;
 }
 

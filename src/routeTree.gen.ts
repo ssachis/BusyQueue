@@ -15,6 +15,7 @@ import { Route as ImportDocumentRouteImport } from './routes/import-document'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as ProjectionsRouteImport } from './routes/projections'
 import { Route as RemindersRouteImport } from './routes/reminders'
+import { Route as ReviewRouteImport } from './routes/review'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiDocumentImportsRouteImport } from './routes/api/document-imports'
 import { Route as ApiImportsRouteImport } from './routes/api/imports'
@@ -63,6 +64,11 @@ const ProjectionsRoute = ProjectionsRouteImport.update({
 const RemindersRoute = RemindersRouteImport.update({
   id: '/reminders',
   path: '/reminders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewRoute = ReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/inbox': typeof InboxRoute
   '/projections': typeof ProjectionsRoute
   '/reminders': typeof RemindersRoute
+  '/review': typeof ReviewRoute
   '/api/chat': typeof ApiChatRoute
   '/api/document-imports': typeof ApiDocumentImportsRoute
   '/api/imports': typeof ApiImportsRouteWithChildren
@@ -195,6 +202,7 @@ export interface FileRoutesByTo {
   '/inbox': typeof InboxRoute
   '/projections': typeof ProjectionsRoute
   '/reminders': typeof RemindersRoute
+  '/review': typeof ReviewRoute
   '/api/chat': typeof ApiChatRoute
   '/api/document-imports': typeof ApiDocumentImportsRoute
   '/api/imports': typeof ApiImportsRouteWithChildren
@@ -223,6 +231,7 @@ export interface FileRoutesById {
   '/inbox': typeof InboxRoute
   '/projections': typeof ProjectionsRoute
   '/reminders': typeof RemindersRoute
+  '/review': typeof ReviewRoute
   '/api/chat': typeof ApiChatRoute
   '/api/document-imports': typeof ApiDocumentImportsRoute
   '/api/imports': typeof ApiImportsRouteWithChildren
@@ -252,6 +261,7 @@ export interface FileRouteTypes {
     | '/inbox'
     | '/projections'
     | '/reminders'
+    | '/review'
     | '/api/chat'
     | '/api/document-imports'
     | '/api/imports'
@@ -279,6 +289,7 @@ export interface FileRouteTypes {
     | '/inbox'
     | '/projections'
     | '/reminders'
+    | '/review'
     | '/api/chat'
     | '/api/document-imports'
     | '/api/imports'
@@ -306,6 +317,7 @@ export interface FileRouteTypes {
     | '/inbox'
     | '/projections'
     | '/reminders'
+    | '/review'
     | '/api/chat'
     | '/api/document-imports'
     | '/api/imports'
@@ -334,6 +346,7 @@ export interface RootRouteChildren {
   InboxRoute: typeof InboxRoute
   ProjectionsRoute: typeof ProjectionsRoute
   RemindersRoute: typeof RemindersRoute
+  ReviewRoute: typeof ReviewRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiDocumentImportsRoute: typeof ApiDocumentImportsRoute
   ApiImportsRoute: typeof ApiImportsRouteWithChildren
@@ -396,6 +409,13 @@ declare module '@tanstack/react-router' {
       path: '/reminders'
       fullPath: '/reminders'
       preLoaderRoute: typeof RemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review': {
+      id: '/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof ReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -553,6 +573,7 @@ const rootRouteChildren: RootRouteChildren = {
   InboxRoute: InboxRoute,
   ProjectionsRoute: ProjectionsRoute,
   RemindersRoute: RemindersRoute,
+  ReviewRoute: ReviewRoute,
   ApiChatRoute: ApiChatRoute,
   ApiDocumentImportsRoute: ApiDocumentImportsRoute,
   ApiImportsRoute: ApiImportsRouteWithChildren,

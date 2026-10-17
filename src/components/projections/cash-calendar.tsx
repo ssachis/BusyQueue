@@ -207,8 +207,8 @@ function ItemRow({
 			<td className="px-3 py-2">
 				{label?.reviewInvoiceId ? (
 					<Link
-						to="/"
-						search={{ v: "v2", invoice: label.reviewInvoiceId }}
+						to="/review"
+						search={{ invoice: label.reviewInvoiceId }}
 						className="font-medium hover:underline"
 					>
 						{name}

@@ -34,7 +34,8 @@ why, we fix it, and the fix holds on the same invoices.**
 > example: the agreed price is $2.10/lb, the invoice says $2.16/lb, and they bought
 > 1,200 lb. That's $72 on one line. Nobody has time to check every invoice.
 
-Show the review page: the invoice list, and the flags with dollar impact.
+Show the dashboard (`/`), then Review bills (`/review`): the bill list, flagged bills
+first by dollar impact.
 
 ## 2. One run, fully traced (60 s)
 
@@ -107,10 +108,10 @@ Failed tool calls inside completed runs:
   - `lookup_vendor_prices` is red: `price_not_found: No agreed price for 5 of 5
     lines from vendor "Harbor Foods, Inc."`.
   - The agent says it couldn't check the lines instead of guessing.
-- **In the app** (`/?v=v1`): the **"Why v1 runs fail"** panel groups the failed tool
-  calls and names the cause in one code-generated sentence. It lists the vendor spellings
+- **In the app** (`/review`): when the latest check of a bill had failed tool calls, a
+  small **"couldn't be fully checked"** notice groups them and lists the vendor spellings
   that don't match the price list, and the units billed differently from the contract.
-  This works without PRISM's judge.
+  The bill itself says "Couldn't fully check this bill". This works without PRISM's judge.
 - **PRISM → Alerts:** rule *"BusyQ: failed tool calls (v1 price lookup)"*,
   `trace_failures_per_hour` above 3, high severity.
 - **PRISM → Clusters:** *"failures in busyq-auditor …"*:
@@ -142,7 +143,7 @@ Dollars found    $9,878.95 of $9,878.95 planted
 
 ## 5. Human in the loop (15 s)
 
-On `/?v=v2&invoice=inv-1001`, edit the agent's email if you want, then Approve:
+On `/review?invoice=inv-1001`, edit the agent's email if you want, then Approve:
 - **The approval is logged:** who, when, what and how much go into an append-only table.
 - **The database enforces it:** triggers stop approvals being edited or deleted, and an
   approved draft can't change.
