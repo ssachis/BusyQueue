@@ -1,0 +1,63 @@
+{
+	"title": "QUOTE",
+	"number": "Q-0412",
+	"date": "10/09/2026",
+	"buyer": {
+		"name": "Lincoln Elementary PTA",
+		"attn": "Maria Gonzalez",
+		"address": "455 Lincoln Ave",
+		"city": "Northfield",
+		"region": "CA",
+		"postalCode": "95001",
+		"email": "lincolnpta@example.org"
+	},
+	"event": "Fall Family Night, Fri Oct 24, 5:30pm, Lincoln cafeteria",
+	"lines": [
+		{
+			"qty": "12",
+			"unit": "",
+			"desc": "Cheese pizza, 16\"",
+			"price": "14.50",
+			"t": true,
+			"amount": "174.00"
+		},
+		{
+			"qty": "4",
+			"unit": "trays",
+			"desc": "Garden salad tray",
+			"price": "22.00",
+			"t": true,
+			"amount": "88.00"
+		},
+		{
+			"qty": "120",
+			"unit": "",
+			"desc": "Fruit cups",
+			"price": "1.25",
+			"t": true,
+			"amount": "150.00"
+		},
+		{
+			"qty": "120",
+			"unit": "",
+			"desc": "Bottled water 16oz",
+			"price": "0.75",
+			"t": true,
+			"amount": "90.00"
+		},
+		{
+			"qty": "6",
+			"unit": "hrs",
+			"desc": "Serving staff (2 x 3 hrs)",
+			"price": "28.00",
+			"t": false,
+			"amount": "168.00"
+		}
+	],
+	"subtotal": "670.00",
+	"taxRate": "8.25",
+	"tax": "41.42",
+	"total": "712.42",
+	"terms": "Quote valid 30 days. 50% deposit to confirm.",
+	"signedBy": "R. Okafor, Catering Coordinator"
+}

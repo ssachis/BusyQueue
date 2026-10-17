@@ -1,0 +1,58 @@
+{
+	"title": "INVOICE",
+	"number": "NFS-2026-031",
+	"date": "October 1, 2026",
+	"dueDate": "October 31, 2026",
+	"terms": "Net 30",
+	"po": "RUSD-PO-55821",
+	"buyer": {
+		"name": "Riverside Unified School District",
+		"lines": [
+			"Nutrition Services Department",
+			"Attn: Accounts Payable",
+			"88 Canal Street"
+		],
+		"city": "Riverside Falls",
+		"region": "CA",
+		"postalCode": "95010",
+		"email": "ap@riversideusd.example.org"
+	},
+	"lines": [
+		{
+			"desc": "Summer meal program: central kitchen lunches (weeks 1-4)",
+			"qty": "2,400",
+			"unit": "meal",
+			"price": "3.15",
+			"disc": "",
+			"amount": "7,560.00"
+		},
+		{
+			"desc": "Breakfast packs",
+			"qty": "1,800",
+			"unit": "pack",
+			"price": "1.85",
+			"disc": "",
+			"amount": "3,330.00"
+		},
+		{
+			"desc": "Refrigerated delivery, route charge",
+			"qty": "8",
+			"unit": "trip",
+			"price": "65.00",
+			"disc": "",
+			"amount": "520.00"
+		},
+		{
+			"desc": "Milk, 1% half-pint (USDA Foods transfer)",
+			"qty": "40",
+			"unit": "case",
+			"price": "18.40",
+			"disc": "10%",
+			"amount": "662.40"
+		}
+	],
+	"subtotal": "12,072.40",
+	"tax": "0.00",
+	"total": "12,072.40",
+	"note": "Sales between California public school districts are not subject to sales tax."
+}

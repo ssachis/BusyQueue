@@ -3,6 +3,7 @@ import {
 	Building2,
 	ChartColumn,
 	ClipboardCheck,
+	FilePen,
 	FileScan,
 	FileText,
 	type LucideIcon,
@@ -29,5 +30,6 @@ export const mainNav: NavItem[] = [
 	{ to: "/import", label: "Import", icon: FileScan },
 	{ to: "/projections", label: "Projections", icon: ChartColumn },
 	{ to: "/reminders", label: "Reminders", icon: BellRing },
+	{ to: "/import-document", label: "Import document", icon: FilePen },
 	{ to: "/settings/business", label: "Business", icon: Building2 },
 ];

@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ImportRouteImport } from './routes/import'
+import { Route as ImportDocumentRouteImport } from './routes/import-document'
 import { Route as ProjectionsRouteImport } from './routes/projections'
 import { Route as RemindersRouteImport } from './routes/reminders'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiDocumentImportsRouteImport } from './routes/api/document-imports'
 import { Route as ApiImportsRouteImport } from './routes/api/imports'
 import { Route as ApiRunsRouteImport } from './routes/api/runs'
 import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
@@ -41,6 +43,11 @@ const ImportRoute = ImportRouteImport.update({
   path: '/import',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ImportDocumentRoute = ImportDocumentRouteImport.update({
+  id: '/import-document',
+  path: '/import-document',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectionsRoute = ProjectionsRouteImport.update({
   id: '/projections',
   path: '/projections',
@@ -54,6 +61,11 @@ const RemindersRoute = RemindersRouteImport.update({
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDocumentImportsRoute = ApiDocumentImportsRouteImport.update({
+  id: '/api/document-imports',
+  path: '/api/document-imports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiImportsRoute = ApiImportsRouteImport.update({
@@ -140,9 +152,11 @@ const SettingsBusinessRoute = SettingsBusinessRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
+  '/import-document': typeof ImportDocumentRoute
   '/projections': typeof ProjectionsRoute
   '/reminders': typeof RemindersRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/document-imports': typeof ApiDocumentImportsRoute
   '/api/imports': typeof ApiImportsRoute
   '/api/runs': typeof ApiRunsRoute
   '/catalog/$id': typeof CatalogIdRoute
@@ -163,9 +177,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
+  '/import-document': typeof ImportDocumentRoute
   '/projections': typeof ProjectionsRoute
   '/reminders': typeof RemindersRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/document-imports': typeof ApiDocumentImportsRoute
   '/api/imports': typeof ApiImportsRoute
   '/api/runs': typeof ApiRunsRoute
   '/catalog/$id': typeof CatalogIdRoute
@@ -187,9 +203,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
+  '/import-document': typeof ImportDocumentRoute
   '/projections': typeof ProjectionsRoute
   '/reminders': typeof RemindersRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/document-imports': typeof ApiDocumentImportsRoute
   '/api/imports': typeof ApiImportsRoute
   '/api/runs': typeof ApiRunsRoute
   '/catalog/$id': typeof CatalogIdRoute
@@ -212,9 +230,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/import'
+    | '/import-document'
     | '/projections'
     | '/reminders'
     | '/api/chat'
+    | '/api/document-imports'
     | '/api/imports'
     | '/api/runs'
     | '/catalog/$id'
@@ -235,9 +255,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/import'
+    | '/import-document'
     | '/projections'
     | '/reminders'
     | '/api/chat'
+    | '/api/document-imports'
     | '/api/imports'
     | '/api/runs'
     | '/catalog/$id'
@@ -258,9 +280,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/import'
+    | '/import-document'
     | '/projections'
     | '/reminders'
     | '/api/chat'
+    | '/api/document-imports'
     | '/api/imports'
     | '/api/runs'
     | '/catalog/$id'
@@ -282,9 +306,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ImportRoute: typeof ImportRoute
+  ImportDocumentRoute: typeof ImportDocumentRoute
   ProjectionsRoute: typeof ProjectionsRoute
   RemindersRoute: typeof RemindersRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiDocumentImportsRoute: typeof ApiDocumentImportsRoute
   ApiImportsRoute: typeof ApiImportsRoute
   ApiRunsRoute: typeof ApiRunsRoute
   CatalogIdRoute: typeof CatalogIdRoute
@@ -319,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/import-document': {
+      id: '/import-document'
+      path: '/import-document'
+      fullPath: '/import-document'
+      preLoaderRoute: typeof ImportDocumentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projections': {
       id: '/projections'
       path: '/projections'
@@ -338,6 +371,13 @@ declare module '@tanstack/react-router' {
       path: '/api/chat'
       fullPath: '/api/chat'
       preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/document-imports': {
+      id: '/api/document-imports'
+      path: '/api/document-imports'
+      fullPath: '/api/document-imports'
+      preLoaderRoute: typeof ApiDocumentImportsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/imports': {
@@ -458,9 +498,11 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ImportRoute: ImportRoute,
+  ImportDocumentRoute: ImportDocumentRoute,
   ProjectionsRoute: ProjectionsRoute,
   RemindersRoute: RemindersRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiDocumentImportsRoute: ApiDocumentImportsRoute,
   ApiImportsRoute: ApiImportsRoute,
   ApiRunsRoute: ApiRunsRoute,
   CatalogIdRoute: CatalogIdRoute,
