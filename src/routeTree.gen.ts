@@ -27,6 +27,7 @@ import { Route as ContractsNewRouteImport } from './routes/contracts/new'
 import { Route as DocumentsIndexRouteImport } from './routes/documents/index'
 import { Route as DocumentsIdRouteImport } from './routes/documents/$id'
 import { Route as DocumentsNewRouteImport } from './routes/documents/new'
+import { Route as PrintIdRouteImport } from './routes/print.$id'
 import { Route as SettingsBusinessRouteImport } from './routes/settings/business'
 
 const IndexRoute = IndexRouteImport.update({
@@ -119,6 +120,11 @@ const DocumentsNewRoute = DocumentsNewRouteImport.update({
   path: '/documents/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrintIdRoute = PrintIdRouteImport.update({
+  id: '/print/$id',
+  path: '/print/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsBusinessRoute = SettingsBusinessRouteImport.update({
   id: '/settings/business',
   path: '/settings/business',
@@ -140,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/contracts/new': typeof ContractsNewRoute
   '/documents/$id': typeof DocumentsIdRoute
   '/documents/new': typeof DocumentsNewRoute
+  '/print/$id': typeof PrintIdRoute
   '/settings/business': typeof SettingsBusinessRoute
   '/catalog/': typeof CatalogIndexRoute
   '/clients/': typeof ClientsIndexRoute
@@ -161,6 +168,7 @@ export interface FileRoutesByTo {
   '/contracts/new': typeof ContractsNewRoute
   '/documents/$id': typeof DocumentsIdRoute
   '/documents/new': typeof DocumentsNewRoute
+  '/print/$id': typeof PrintIdRoute
   '/settings/business': typeof SettingsBusinessRoute
   '/catalog': typeof CatalogIndexRoute
   '/clients': typeof ClientsIndexRoute
@@ -183,6 +191,7 @@ export interface FileRoutesById {
   '/contracts/new': typeof ContractsNewRoute
   '/documents/$id': typeof DocumentsIdRoute
   '/documents/new': typeof DocumentsNewRoute
+  '/print/$id': typeof PrintIdRoute
   '/settings/business': typeof SettingsBusinessRoute
   '/catalog/': typeof CatalogIndexRoute
   '/clients/': typeof ClientsIndexRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/contracts/new'
     | '/documents/$id'
     | '/documents/new'
+    | '/print/$id'
     | '/settings/business'
     | '/catalog/'
     | '/clients/'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/contracts/new'
     | '/documents/$id'
     | '/documents/new'
+    | '/print/$id'
     | '/settings/business'
     | '/catalog'
     | '/clients'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/contracts/new'
     | '/documents/$id'
     | '/documents/new'
+    | '/print/$id'
     | '/settings/business'
     | '/catalog/'
     | '/clients/'
@@ -270,6 +282,7 @@ export interface RootRouteChildren {
   ContractsNewRoute: typeof ContractsNewRoute
   DocumentsIdRoute: typeof DocumentsIdRoute
   DocumentsNewRoute: typeof DocumentsNewRoute
+  PrintIdRoute: typeof PrintIdRoute
   SettingsBusinessRoute: typeof SettingsBusinessRoute
   CatalogIndexRoute: typeof CatalogIndexRoute
   ClientsIndexRoute: typeof ClientsIndexRoute
@@ -405,6 +418,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocumentsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/print/$id': {
+      id: '/print/$id'
+      path: '/print/$id'
+      fullPath: '/print/$id'
+      preLoaderRoute: typeof PrintIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings/business': {
       id: '/settings/business'
       path: '/settings/business'
@@ -430,6 +450,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContractsNewRoute: ContractsNewRoute,
   DocumentsIdRoute: DocumentsIdRoute,
   DocumentsNewRoute: DocumentsNewRoute,
+  PrintIdRoute: PrintIdRoute,
   SettingsBusinessRoute: SettingsBusinessRoute,
   CatalogIndexRoute: CatalogIndexRoute,
   ClientsIndexRoute: ClientsIndexRoute,
