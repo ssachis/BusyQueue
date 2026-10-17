@@ -1,8 +1,8 @@
 import { getRouteApi, useRouter } from "@tanstack/react-router";
 import { Check, Loader2, Play, Sparkles, TriangleAlert } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { PageBody, PageHeader } from "#/components/app-shell.tsx";
+import { PageBody } from "#/components/app-shell.tsx";
 import { Badge } from "#/components/ui/badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import {
@@ -25,6 +25,7 @@ import type {
 	InvoiceRow,
 	ReviewSummary,
 } from "#/server/review-store.ts";
+import { CashflowChart } from "./cashflow-chart.tsx";
 
 const route = getRouteApi("/");
 
@@ -63,28 +64,6 @@ function rowStatus(r: InvoiceRow): RowStatus {
 	return { label: "Clean", variant: "success" };
 }
 
-function Stat({
-	label,
-	value,
-	note,
-}: {
-	label: string;
-	value: string;
-	note?: ReactNode;
-}) {
-	return (
-		<Card className="gap-1 py-4">
-			<CardContent className="space-y-1">
-				<div className="text-sm text-muted-foreground">{label}</div>
-				<div className="text-2xl font-semibold tracking-tight">{value}</div>
-				{note ? (
-					<div className="text-xs text-muted-foreground">{note}</div>
-				) : null}
-			</CardContent>
-		</Card>
-	);
-}
-
 export function ReviewPage() {
 	const { summary, detail, invoiceId } = route.useLoaderData();
 	const v = route.useSearch().v ?? "v1";
@@ -98,47 +77,73 @@ export function ReviewPage() {
 
 	return (
 		<>
-			<PageHeader
-				title="Invoice review"
-				description="Northfield Unified School District food service (synthetic data). Code finds and prices every problem; the agent explains it and drafts the email; you approve."
-			>
-				<fieldset className="flex items-center gap-1 rounded-lg border p-1">
-					<legend className="sr-only">Agent version</legend>
-					{(["v1", "v2"] as const).map((ver) => (
-						<Button
-							key={ver}
-							size="sm"
-							variant={v === ver ? "default" : "ghost"}
-							onClick={() => setVersion(ver)}
-						>
-							Agent {ver}
-						</Button>
-					))}
-				</fieldset>
-			</PageHeader>
-			<PageBody className="space-y-6">
-				<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-					<Stat
-						label="Invoices audited"
-						value={`${totals.run} / ${totals.invoices}`}
-						note={`Latest ${v} run per invoice`}
-					/>
-					<Stat
-						label="Recoverable"
-						value={money(totals.recoverableMinor, currency)}
-						note={`${totals.flagged} flagged invoices, plus ${money(totals.orphanMinor, currency)} in payments with no invoice`}
-					/>
-					<Stat label="Flagged invoices" value={String(totals.flagged)} />
-					<Stat
-						label="Runs with failed tool calls"
-						value={String(totals.failedRuns)}
-						note={
-							totals.failedRuns > 0
-								? "See the root cause below"
-								: "Every tool call succeeded"
-						}
-					/>
-				</div>
+			<PageBody className="space-y-8">
+				<header className="grid items-center gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+					<div className="space-y-5">
+						<div className="flex flex-wrap items-center justify-between gap-3">
+							<p className="text-sm text-muted-foreground">
+								Northfield Unified School District · {totals.run} of{" "}
+								{totals.invoices} invoices checked
+							</p>
+							<fieldset className="flex items-center gap-1 rounded-full border bg-card p-1">
+								<legend className="sr-only">Agent version</legend>
+								{(["v1", "v2"] as const).map((ver) => (
+									<Button
+										key={ver}
+										size="sm"
+										variant={v === ver ? "default" : "ghost"}
+										className="rounded-full"
+										onClick={() => setVersion(ver)}
+									>
+										Agent {ver}
+									</Button>
+								))}
+							</fieldset>
+						</div>
+						<div>
+							<div className="text-6xl font-semibold tracking-tighter tabular-nums sm:text-7xl">
+								{money(totals.recoverableMinor + totals.orphanMinor, currency)}
+							</div>
+							<p className="mt-2 text-lg text-muted-foreground">
+								lost to billing mistakes. Ready to recover.
+							</p>
+						</div>
+						<p className="text-sm text-muted-foreground">
+							{plural(totals.flagged, "invoice")} flagged
+							{totals.orphanMinor > 0
+								? `, plus ${money(totals.orphanMinor, currency)} paid with no invoice`
+								: ""}
+							.{" "}
+							{totals.failedRuns > 0
+								? `${plural(totals.failedRuns, "run")} could not check every line.`
+								: "Every line was checked."}
+						</p>
+					</div>
+					<div className="rounded-3xl bg-gradient-to-br from-chart-1 to-chart-5 p-6 text-primary-foreground shadow-lg">
+						<div className="flex items-baseline justify-between gap-3">
+							<h2 className="text-base font-semibold">Cash flow</h2>
+							<ul className="flex gap-4 text-xs text-primary-foreground/80">
+								<li className="flex items-center gap-1.5">
+									<span
+										aria-hidden
+										className="size-2 rounded-full bg-primary-foreground"
+									/>
+									Bills in
+								</li>
+								<li className="flex items-center gap-1.5">
+									<span
+										aria-hidden
+										className="size-2 rounded-full bg-primary-foreground/50"
+									/>
+									Paid out
+								</li>
+							</ul>
+						</div>
+						<div className="mt-3">
+							<CashflowChart data={summary.cashflow} />
+						</div>
+					</div>
+				</header>
 
 				<FailuresPanel summary={summary} />
 
