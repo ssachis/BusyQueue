@@ -76,6 +76,15 @@ const serverEnvSchema = z.object({
 		"openai/gpt-5.4-mini",
 	]),
 
+	// ── Projections digest (narrates the forecast; never computes) ──
+	/** Model that writes the plain-English summary of the forecast numbers. */
+	DIGEST_MODEL: z.string().min(1).default("anthropic/claude-sonnet-5-5"),
+	/** Comma list Nicrron cascades to, in order, when DIGEST_MODEL fails. */
+	DIGEST_FALLBACK_MODELS: commaList.default([
+		"openai/gpt-5.4-mini",
+		"anthropic/claude-haiku-5-5",
+	]),
+
 	// ── PRISM tracing (disabled when the key is unset) ──
 	PRISMTRACE_API_KEY: optionalString,
 	PRISMTRACE_PROJECT_ID: optionalString,
