@@ -57,7 +57,10 @@ export function scoreRun(
 		truePositives += 1;
 		foundMinor += f.impactMinor;
 		if (hit.expectedImpactMinor !== f.impactMinor) {
-			wrongAmount.push({ finding: f, expectedImpactMinor: hit.expectedImpactMinor });
+			wrongAmount.push({
+				finding: f,
+				expectedImpactMinor: hit.expectedImpactMinor,
+			});
 		}
 	}
 	const falseNegatives = [...pool.values()].flat();
@@ -68,7 +71,8 @@ export function scoreRun(
 		falsePositives,
 		falseNegatives,
 		wrongAmount,
-		precision: truePositives + fp === 0 ? 1 : truePositives / (truePositives + fp),
+		precision:
+			truePositives + fp === 0 ? 1 : truePositives / (truePositives + fp),
 		recall: truePositives + fn === 0 ? 1 : truePositives / (truePositives + fn),
 		foundMinor,
 		plantedMinor: rows.reduce((a, r) => a + r.expectedImpactMinor, 0),

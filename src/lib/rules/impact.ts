@@ -1,5 +1,5 @@
-import { addMoney, type Money, zero } from "#/lib/money/index.ts";
 import type { Finding, FindingKind } from "#/lib/busyq/types.ts";
+import { addMoney, type Money, zero } from "#/lib/money/index.ts";
 
 export type ImpactSummary = {
 	total: Money;
@@ -24,7 +24,10 @@ export function calculateImpact(
 		const key = f.invoiceId ?? NO_INVOICE;
 		byInvoice[key] = addMoney(byInvoice[key] ?? zero(currency), amount);
 		const slot = byKind[f.kind] ?? { count: 0, impact: zero(currency) };
-		byKind[f.kind] = { count: slot.count + 1, impact: addMoney(slot.impact, amount) };
+		byKind[f.kind] = {
+			count: slot.count + 1,
+			impact: addMoney(slot.impact, amount),
+		};
 	}
 	return { total, byInvoice, byKind };
 }

@@ -1,5 +1,5 @@
-import { toMinor } from "#/lib/money/index.ts";
 import type { Finding, Invoice, Payment } from "#/lib/busyq/types.ts";
+import { toMinor } from "#/lib/money/index.ts";
 
 const byDateThenId = (a: Payment, b: Payment) =>
 	a.paidOn.localeCompare(b.paidOn) || a.id.localeCompare(b.id);

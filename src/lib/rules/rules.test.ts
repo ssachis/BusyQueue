@@ -1,9 +1,8 @@
 import { readdirSync, readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
-	answerKey as fixtureKey,
 	invoices as fixtureInvoices,
+	answerKey as fixtureKey,
 	payments as fixturePayments,
 	priceList as fixturePrices,
 } from "#/lib/busyq/fixtures/index.ts";
@@ -16,7 +15,6 @@ import {
 	PriceRow,
 } from "#/lib/busyq/types.ts";
 import {
-	NO_INVOICE,
 	calculateImpact,
 	checkInvoice,
 	checkInvoicePayments,
@@ -24,6 +22,7 @@ import {
 	compareLines,
 	findOrphanPayments,
 	lookupPrices,
+	NO_INVOICE,
 	scoreRun,
 } from "./index.ts";
 
@@ -35,7 +34,10 @@ const byId = (id: string) => {
 
 describe("lookupPrices (v1, exact match)", () => {
 	it("finds an exact vendor, item and unit", () => {
-		const r = lookupPrices(fixturePrices, "Sysco", { item: "Chicken breast", unit: "lb" });
+		const r = lookupPrices(fixturePrices, "Sysco", {
+			item: "Chicken breast",
+			unit: "lb",
+		});
 		expect(r.ok).toBe(true);
 		if (r.ok) expect(r.data.agreedUnitPrice).toBe("2.10");
 	});
@@ -57,7 +59,10 @@ describe("lookupPrices (v1, exact match)", () => {
 
 describe("compareLines", () => {
 	it("flags the 6 cent overcharge as exactly $72.00", () => {
-		const { findings, unpriced } = compareLines(byId("inv-overcharge"), fixturePrices);
+		const { findings, unpriced } = compareLines(
+			byId("inv-overcharge"),
+			fixturePrices,
+		);
 		expect(unpriced).toEqual([]);
 		expect(findings).toHaveLength(1);
 		expect(findings[0]).toMatchObject({
@@ -71,7 +76,10 @@ describe("compareLines", () => {
 		});
 	});
 	it("finds nothing on a clean invoice", () => {
-		expect(compareLines(byId("inv-clean"), fixturePrices)).toEqual({ findings: [], unpriced: [] });
+		expect(compareLines(byId("inv-clean"), fixturePrices)).toEqual({
+			findings: [],
+			unpriced: [],
+		});
 	});
 	it("does not flag an undercharge", () => {
 		const inv = structuredClone(byId("inv-overcharge"));
@@ -79,14 +87,18 @@ describe("compareLines", () => {
 		expect(compareLines(inv, fixturePrices).findings).toEqual([]);
 	});
 	it("reports unpriced lines instead of guessing (v1 on the variant invoice)", () => {
-		const { findings, unpriced } = compareLines(byId("inv-variant"), fixturePrices);
+		const { findings, unpriced } = compareLines(
+			byId("inv-variant"),
+			fixturePrices,
+		);
 		expect(findings).toEqual([]);
 		expect(unpriced).toHaveLength(1);
 		expect(unpriced[0]).toMatchObject({ lineNo: 1, unit: "case" });
 		expect(unpriced[0]?.error.code).toBe("price_not_found");
 	});
 	it("accepts another lookup, which is how v2 plugs in", () => {
-		const v2ish = () => ok({ row: fixturePrices[0] as PriceRow, agreedUnitPrice: "2.10" });
+		const v2ish = () =>
+			ok({ row: fixturePrices[0] as PriceRow, agreedUnitPrice: "2.10" });
 		const inv = structuredClone(byId("inv-overcharge"));
 		expect(compareLines(inv, fixturePrices, v2ish).findings).toHaveLength(1);
 	});
@@ -107,7 +119,11 @@ describe("checkInvoice", () => {
 		inv.statedTotal = "5184.00";
 		const f = checkInvoice(inv);
 		expect(f).toHaveLength(1);
-		expect(f[0]).toMatchObject({ kind: "duplicate_line", lineNo: 2, impactMinor: 259200 });
+		expect(f[0]).toMatchObject({
+			kind: "duplicate_line",
+			lineNo: 2,
+			impactMinor: 259200,
+		});
 	});
 	it("flags a stated total above the sum of the lines", () => {
 		const inv = structuredClone(byId("inv-clean"));
@@ -128,7 +144,11 @@ describe("checkInvoice", () => {
 		inv.statedTotal = "160.00";
 		const f = checkInvoice(inv);
 		expect(f).toHaveLength(1);
-		expect(f[0]).toMatchObject({ kind: "wrong_total", lineNo: 1, impactMinor: 7500 });
+		expect(f[0]).toMatchObject({
+			kind: "wrong_total",
+			lineNo: 1,
+			impactMinor: 7500,
+		});
 	});
 	it("ignores a stated total below the lines", () => {
 		const inv = structuredClone(byId("inv-clean"));
@@ -137,7 +157,12 @@ describe("checkInvoice", () => {
 	});
 	it("rounds once, at the end (half-up on exact decimals)", () => {
 		const inv = structuredClone(byId("inv-clean"));
-		inv.lines[0] = { ...inv.lines[0]!, quantity: "3", unitPrice: "0.335", amount: "1.01" };
+		inv.lines[0] = {
+			...inv.lines[0]!,
+			quantity: "3",
+			unitPrice: "0.335",
+			amount: "1.01",
+		};
 		inv.statedTotal = "1.01";
 		expect(checkInvoice(inv)).toEqual([]); // 3 x 0.335 = 1.005 -> 1.01
 	});
@@ -153,19 +178,31 @@ describe("payments", () => {
 			paymentId: "pay-2",
 			impactMinor: 8500,
 		});
-		expect(checkInvoicePayments(byId("inv-overcharge"), fixturePayments)).toEqual([]);
+		expect(
+			checkInvoicePayments(byId("inv-overcharge"), fixturePayments),
+		).toEqual([]);
 	});
 	it("finds payments with no invoice, null or unknown number", () => {
 		const f = findOrphanPayments(fixtureInvoices, fixturePayments);
 		expect(f.map((x) => x.paymentId)).toEqual(["pay-3"]);
-		const extra = [...fixturePayments, Payment.parse({ ...fixturePayments[0], id: "pay-9", invoiceNumber: "NOPE-1" })];
-		expect(findOrphanPayments(fixtureInvoices, extra).map((x) => x.paymentId)).toEqual(["pay-3", "pay-9"]);
+		const extra = [
+			...fixturePayments,
+			Payment.parse({
+				...fixturePayments[0],
+				id: "pay-9",
+				invoiceNumber: "NOPE-1",
+			}),
+		];
+		expect(
+			findOrphanPayments(fixtureInvoices, extra).map((x) => x.paymentId),
+		).toEqual(["pay-3", "pay-9"]);
 	});
 	it("checkPayments returns both kinds", () => {
-		expect(checkPayments(fixtureInvoices, fixturePayments).map((x) => x.kind).sort()).toEqual([
-			"duplicate_payment",
-			"orphan_payment",
-		]);
+		expect(
+			checkPayments(fixtureInvoices, fixturePayments)
+				.map((x) => x.kind)
+				.sort(),
+		).toEqual(["duplicate_payment", "orphan_payment"]);
 	});
 });
 
@@ -187,8 +224,19 @@ describe("calculateImpact", () => {
 		const s = calculateImpact([
 			finding({ impactMinor: 100 }),
 			finding({ lineNo: 2, impactMinor: 250 }),
-			finding({ invoiceId: "inv-b", kind: "wrong_total", lineNo: null, impactMinor: 5 }),
-			finding({ invoiceId: null, kind: "orphan_payment", lineNo: null, paymentId: "p", impactMinor: 31000 }),
+			finding({
+				invoiceId: "inv-b",
+				kind: "wrong_total",
+				lineNo: null,
+				impactMinor: 5,
+			}),
+			finding({
+				invoiceId: null,
+				kind: "orphan_payment",
+				lineNo: null,
+				paymentId: "p",
+				impactMinor: 31000,
+			}),
 		]);
 		expect(s.total).toEqual({ minor: 31355, currency: "USD" });
 		expect(s.byInvoice["inv-a"]?.minor).toBe(350);
@@ -205,7 +253,10 @@ describe("calculateImpact", () => {
 describe("scoreRun", () => {
 	it("scores the v1 run on the fixtures: one miss, no false flags", () => {
 		const findings = [
-			...fixtureInvoices.flatMap((i) => [...compareLines(i, fixturePrices).findings, ...checkInvoice(i)]),
+			...fixtureInvoices.flatMap((i) => [
+				...compareLines(i, fixturePrices).findings,
+				...checkInvoice(i),
+			]),
 			...checkPayments(fixtureInvoices, fixturePayments),
 		];
 		const s = scoreRun(findings, fixtureKey);
@@ -217,9 +268,19 @@ describe("scoreRun", () => {
 		expect(s.wrongAmount).toEqual([]);
 	});
 	it("flags a wrong amount without hiding the match", () => {
-		const s = scoreRun([finding({ impactMinor: 90 })], [
-			{ kind: "overcharge", invoiceId: "inv-a", lineNo: 1, paymentId: null, expectedImpactMinor: 100, currency: "USD" },
-		]);
+		const s = scoreRun(
+			[finding({ impactMinor: 90 })],
+			[
+				{
+					kind: "overcharge",
+					invoiceId: "inv-a",
+					lineNo: 1,
+					paymentId: null,
+					expectedImpactMinor: 100,
+					currency: "USD",
+				},
+			],
+		);
 		expect(s.truePositives).toBe(1);
 		expect(s.wrongAmount).toHaveLength(1);
 	});
@@ -260,7 +321,8 @@ function parseCsv(text: string): Record<string, string>[] {
 	});
 }
 
-const opt = (s: string | undefined) => (s === undefined || s === "" ? undefined : s);
+const opt = (s: string | undefined) =>
+	s === undefined || s === "" ? undefined : s;
 const nul = (s: string | undefined) => (s === undefined || s === "" ? null : s);
 
 const prices = parseCsv(read("price_list.csv")).map((r) =>
@@ -311,14 +373,24 @@ describe("generated school-district data, v1 rules", () => {
 	findings.push(...checkPayments(invoices, payments));
 
 	const variantIds = new Set(
-		index.filter((r) => r.name_variant === "1" || r.unit_variant === "1").map((r) => r.invoice_id as string),
+		index
+			.filter((r) => r.name_variant === "1" || r.unit_variant === "1")
+			.map((r) => r.invoice_id as string),
 	);
-	const cleanIds = new Set(invoices.map((i) => i.id).filter((id) => !variantIds.has(id)));
+	const cleanIds = new Set(
+		invoices.map((i) => i.id).filter((id) => !variantIds.has(id)),
+	);
 
 	it("loads: 40 invoices, all five kinds of planted problem covered", () => {
 		expect(invoices).toHaveLength(40);
 		expect(new Set(key.map((k) => k.kind))).toEqual(
-			new Set(["overcharge", "duplicate_line", "wrong_total", "duplicate_payment", "orphan_payment"]),
+			new Set([
+				"overcharge",
+				"duplicate_line",
+				"wrong_total",
+				"duplicate_payment",
+				"orphan_payment",
+			]),
 		);
 		expect(prices.length).toBeGreaterThanOrEqual(15);
 	});
@@ -349,7 +421,9 @@ describe("generated school-district data, v1 rules", () => {
 		expect(s.foundMinor).toBeLessThan(s.plantedMinor);
 	});
 	it("printed totals equal the sum of printed lines except where planted", () => {
-		const planted = new Set(key.filter((k) => k.kind === "wrong_total").map((k) => k.invoiceId));
+		const planted = new Set(
+			key.filter((k) => k.kind === "wrong_total").map((k) => k.invoiceId),
+		);
 		for (const inv of invoices) {
 			const wrong = checkInvoice(inv).some((f) => f.kind === "wrong_total");
 			expect(wrong).toBe(planted.has(inv.id));

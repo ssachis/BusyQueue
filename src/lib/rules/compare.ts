@@ -1,11 +1,11 @@
-import { dec, toMinor } from "#/lib/money/index.ts";
 import type {
 	Finding,
 	Invoice,
 	PriceRow,
 	ToolError,
 } from "#/lib/busyq/types.ts";
-import { type PriceLookup, lookupPrices } from "./lookup.ts";
+import { dec, toMinor } from "#/lib/money/index.ts";
+import { lookupPrices, type PriceLookup } from "./lookup.ts";
 import { distinctLines, fixed } from "./util.ts";
 
 export type UnpricedLine = {

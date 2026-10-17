@@ -1,11 +1,5 @@
-import {
-	dec,
-	lineAmount,
-	sum,
-	toMajor,
-	toMinor,
-} from "#/lib/money/index.ts";
 import type { Finding, Invoice } from "#/lib/busyq/types.ts";
+import { dec, lineAmount, sum, toMajor, toMinor } from "#/lib/money/index.ts";
 import { distinctLines, lineSignature } from "./util.ts";
 
 const money = (minor: number, currency: string) =>
@@ -64,7 +58,10 @@ export function checkInvoice(invoice: Invoice): Finding[] {
 		}
 	}
 
-	const linesMinor = toMinor(sum(invoice.lines.map((l) => l.amount)), currency).minor;
+	const linesMinor = toMinor(
+		sum(invoice.lines.map((l) => l.amount)),
+		currency,
+	).minor;
 	const statedMinor = toMinor(invoice.statedTotal, currency).minor;
 	if (statedMinor > linesMinor) {
 		findings.push({

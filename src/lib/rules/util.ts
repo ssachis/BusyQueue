@@ -1,9 +1,15 @@
-import { dec } from "#/lib/money/index.ts";
 import type { Invoice, InvoiceLine } from "#/lib/busyq/types.ts";
+import { dec } from "#/lib/money/index.ts";
 
 /** Two lines with the same signature are the same line billed twice. */
 export const lineSignature = (l: InvoiceLine): string =>
-	[l.item, dec(l.quantity).toString(), l.unit, dec(l.unitPrice).toString(), dec(l.amount).toString()].join("|");
+	[
+		l.item,
+		dec(l.quantity).toString(),
+		l.unit,
+		dec(l.unitPrice).toString(),
+		dec(l.amount).toString(),
+	].join("|");
 
 /** The lines worth checking: the first copy of each distinct line, in order. */
 export function distinctLines(invoice: Invoice): InvoiceLine[] {
