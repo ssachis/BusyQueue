@@ -75,6 +75,30 @@ export interface RunDeps {
 	maxModelCalls?: number;
 }
 
+/** One tool call as the batch runner and UI see it. */
+export interface ToolCallSummary {
+	name: string;
+	status: "ok" | "error";
+	errorCode?: string;
+}
+
+export type RunErrorCode =
+	| "model_error"
+	| "incomplete"
+	| "max_turns"
+	| "internal";
+
+/** A run-level failure (not a tool returning an error, which is normal). */
+export class AgentRunError extends Error {
+	constructor(
+		readonly code: RunErrorCode,
+		message: string,
+	) {
+		super(message);
+	}
+}
+
+/** Response of `POST /api/runs`; matches `RunResponse` in src/lib/busyq/batch.ts. */
 export interface RunResult {
 	runId: string;
 	invoiceId: string;
@@ -82,8 +106,8 @@ export interface RunResult {
 	status: "completed" | "failed";
 	model: string | null;
 	explanation: string | null;
-	error: string | null;
-	toolCalls: number;
+	error?: { code: RunErrorCode; message: string };
+	toolCalls: ToolCallSummary[];
 	findings: Finding[];
 	unpricedLines: number;
 	total: Money;
@@ -123,8 +147,8 @@ export async function runAgent(
 
 	let model: string | null = null;
 	let explanation: string | null = null;
-	let error: string | null = null;
-	let toolCalls = 0;
+	let error: { code: RunErrorCode; message: string } | undefined;
+	const toolCalls: ToolCallSummary[] = [];
 	let nudges = 0;
 
 	try {
@@ -132,7 +156,13 @@ export async function runAgent(
 			const reply = await tracer.traceModelCall(
 				deps.modelName,
 				messages.at(-1),
-				() => deps.model(messages, TOOL_SPECS),
+				() =>
+					deps.model(messages, TOOL_SPECS).catch((e: unknown) => {
+						throw new AgentRunError(
+							"model_error",
+							e instanceof Error ? e.message : String(e),
+						);
+					}),
 				(r) => ({
 					output: r.content ?? r.toolCalls.map((c) => c.name).join(", "),
 					model: r.model,
@@ -170,7 +200,8 @@ export async function runAgent(
 					continue;
 				}
 				if (missing.length > 0) {
-					throw new Error(
+					throw new AgentRunError(
+						"incomplete",
 						`Agent finished without calling: ${missing.join(", ")}`,
 					);
 				}
@@ -180,11 +211,19 @@ export async function runAgent(
 
 			for (const call of reply.toolCalls) {
 				called.add(call.name);
-				toolCalls++;
 				const result = await tracer.traceToolCall(
 					call.name,
 					call.arguments,
 					() => executeTool(call.name, call.arguments, state, deps.store),
+				);
+				toolCalls.push(
+					result.ok
+						? { name: call.name, status: "ok" }
+						: {
+								name: call.name,
+								status: "error",
+								errorCode: result.error.code,
+							},
 				);
 				messages.push({
 					role: "tool",
@@ -193,11 +232,20 @@ export async function runAgent(
 				});
 			}
 		}
-		if (explanation === null && error === null) {
-			throw new Error("Agent did not finish within the model-call limit");
+		if (explanation === null) {
+			throw new AgentRunError(
+				"max_turns",
+				"Agent did not finish within the model-call limit",
+			);
 		}
 	} catch (e) {
-		error = e instanceof Error ? e.message : String(e);
+		error =
+			e instanceof AgentRunError
+				? { code: e.code, message: e.message }
+				: {
+						code: "internal",
+						message: e instanceof Error ? e.message : String(e),
+					};
 	}
 
 	const currency = state.invoice?.currency ?? "USD";
@@ -235,14 +283,16 @@ export async function runAgent(
 			status: result.status,
 			model,
 			explanation,
-			error,
-			toolCalls,
+			error: error ? `${error.code}: ${error.message}` : null,
+			toolCalls: toolCalls.length,
 			findings: result.findings,
 			draft,
 		});
 	} finally {
 		await tracer.finish(
-			error ? { error } : { output: explanation ?? undefined },
+			error
+				? { error: `${error.code}: ${error.message}` }
+				: { output: explanation ?? undefined },
 		);
 	}
 	return result;

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { outcomeFromResponse, RunResponse } from "#/lib/busyq/batch.ts";
 import { invoices, payments, priceList } from "#/lib/busyq/fixtures/index.ts";
 import { RunTracer } from "#/server/prism.ts";
 import { amountsIn, checkDraftAmounts } from "./draft-guard.ts";
@@ -94,7 +95,16 @@ describe("runAgent", () => {
 		);
 
 		expect(result.status).toBe("completed");
-		expect(result.toolCalls).toBe(8);
+		expect(result.toolCalls).toHaveLength(8);
+		// The rejected draft shows up as a failed tool call, then the retry succeeds.
+		expect(result.toolCalls.slice(-2)).toEqual([
+			{
+				name: "save_dispute_draft",
+				status: "error",
+				errorCode: "invalid_input",
+			},
+			{ name: "save_dispute_draft", status: "ok" },
+		]);
 		expect(result.total).toEqual({ minor: 7200, currency: "USD" });
 		expect(result.findings).toHaveLength(1);
 		expect(result.findings[0]).toMatchObject({
@@ -133,6 +143,11 @@ describe("runAgent", () => {
 
 		expect(result.status).toBe("completed");
 		expect(result.unpricedLines).toBe(1);
+		expect(result.toolCalls[1]).toEqual({
+			name: "lookup_vendor_prices",
+			status: "error",
+			errorCode: "price_not_found",
+		});
 		expect(result.total.minor).toBe(0);
 		expect(result.draft).toBeNull();
 		const lookup = toolResults(seen[1] as unknown[])[1];
@@ -181,9 +196,43 @@ describe("runAgent", () => {
 			deps(store, model),
 		);
 		expect(result.status).toBe("failed");
-		expect(result.error).toContain("lookup_vendor_prices");
+		expect(result.error?.code).toBe("incomplete");
+		expect(result.error?.message).toContain("lookup_vendor_prices");
 		expect(JSON.stringify(seen[2])).toContain("You haven't called");
 		expect(finished[0]?.status).toBe("failed");
+	});
+
+	it("reports a failing model as a model_error, not a crash", async () => {
+		const { store, finished } = memoryStore();
+		const model: ChatModel = async () => {
+			throw new Error("429 quota exceeded");
+		};
+		const result = await runAgent(
+			{ invoiceId: "inv-clean", version: "v1" },
+			deps(store, model),
+		);
+		expect(result.status).toBe("failed");
+		expect(result.error).toEqual({
+			code: "model_error",
+			message: "429 quota exceeded",
+		});
+		expect(finished[0]?.error).toBe("model_error: 429 quota exceeded");
+	});
+
+	it("matches the batch runner's RunResponse contract", async () => {
+		const { store } = memoryStore();
+		const { model } = scripted([
+			{ toolCalls: allChecks("inv-variant") },
+			{ content: "Could not price the lines." },
+		]);
+		const result = await runAgent(
+			{ invoiceId: "inv-variant", version: "v1" },
+			deps(store, model),
+		);
+		const parsed = RunResponse.parse(JSON.parse(JSON.stringify(result)));
+		expect(outcomeFromResponse(parsed, 0).toolErrors).toEqual([
+			{ name: "lookup_vendor_prices", code: "price_not_found" },
+		]);
 	});
 
 	it("refuses versions that don't exist yet", async () => {
