@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1792257743521,
+      "tag": "0000_busyq_audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1792257743903,
+      "tag": "0001_append_only_guards",
+      "breakpoints": true
+    }
+  ]
+}
