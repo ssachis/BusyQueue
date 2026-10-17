@@ -71,6 +71,13 @@
       "when": 1792265135196,
       "tag": "0009_clients_catalog_links",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1792265331896,
+      "tag": "0010_document_imports",
+      "breakpoints": true
     }
   ]
 }

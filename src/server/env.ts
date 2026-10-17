@@ -90,8 +90,13 @@ const serverEnvSchema = z.object({
 	/** Comma list Nicrron cascades to, in order, when DOC_IMPORT_MODEL fails. */
 	DOC_IMPORT_FALLBACK_MODELS: commaList.default([
 		"openai/gpt-5.4",
+		"anthropic/claude-haiku-5-5",
+	]),
 	/** Comma list for PDFs, primary first; only models that read `file` parts. */
 	DOC_IMPORT_PDF_MODELS: commaList.default([
+		"openai/gpt-5.4",
+		"openai/gpt-5.4-mini",
+	]),
 
 	// ── PRISM tracing (disabled when the key is unset) ──
 	PRISMTRACE_API_KEY: optionalString,
