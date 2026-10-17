@@ -1,0 +1,116 @@
+/**
+ * Sample clients and catalog items for the fictional Northfield Unified
+ * School District food-service office (seller country US). Fixed ids so
+ * loading them is idempotent.
+ */
+import type { CatalogItemInput } from "./catalog.ts";
+import type { ClientInput } from "./client.ts";
+
+export const SAMPLE_CLIENTS: (ClientInput & { id: string })[] = [
+	{
+		id: "cli-sample-pta",
+		name: "Northfield Elementary PTA",
+		addressLines: ["450 Maple Avenue"],
+		city: "Northfield",
+		region: "CA",
+		postalCode: "95001",
+		country: "US",
+		taxId: null,
+		email: "treasurer@northfield-pta.example",
+		placeOfSupply: null,
+		currency: "USD",
+		notes: "Catering for family nights and the spring fair.",
+	},
+	{
+		id: "cli-sample-riverbend",
+		name: "Riverbend Unified School District",
+		addressLines: ["88 Riverside Drive", "Nutrition Services"],
+		city: "Riverbend",
+		region: "CA",
+		postalCode: "95014",
+		country: "US",
+		taxId: "00-0000001",
+		email: "nutrition@riverbend-usd.example",
+		placeOfSupply: null,
+		currency: "USD",
+		notes:
+			"Buys prepared lunches for two schools under a shared-services agreement.",
+	},
+	{
+		id: "cli-sample-summer",
+		name: "Northfield Parks Summer Meals Program",
+		addressLines: ["10 Civic Center Plaza"],
+		city: "Northfield",
+		region: "CA",
+		postalCode: "95002",
+		country: "US",
+		taxId: null,
+		email: "summermeals@northfield-parks.example",
+		placeOfSupply: null,
+		currency: "USD",
+		notes: null,
+	},
+];
+
+export const SAMPLE_CATALOG_ITEMS: (CatalogItemInput & { id: string })[] = [
+	{
+		id: "itm-sample-lunch",
+		name: "Student lunch (reimbursable meal)",
+		description: "Hot entree, fruit, vegetable, grain and milk",
+		unit: "meal",
+		unitPrice: "4.25",
+		currency: "USD",
+		taxCode: "EXEMPT",
+		rate: null,
+		hsnSac: null,
+		code: "MEAL-LUNCH",
+	},
+	{
+		id: "itm-sample-breakfast",
+		name: "Student breakfast",
+		description: null,
+		unit: "meal",
+		unitPrice: "2.75",
+		currency: "USD",
+		taxCode: "EXEMPT",
+		rate: null,
+		hsnSac: null,
+		code: "MEAL-BKFST",
+	},
+	{
+		id: "itm-sample-tray",
+		name: "Catering tray, sandwiches (serves 12)",
+		description: "Assorted sandwiches with fruit",
+		unit: "tray",
+		unitPrice: "58.00",
+		currency: "USD",
+		taxCode: "US-SALES",
+		rate: "7.25",
+		hsnSac: null,
+		code: "CAT-SAND12",
+	},
+	{
+		id: "itm-sample-drinks",
+		name: "Beverage service",
+		description: "Water, juice and coffee",
+		unit: "person",
+		unitPrice: "1.50",
+		currency: "USD",
+		taxCode: "US-SALES",
+		rate: "7.25",
+		hsnSac: null,
+		code: "CAT-BEV",
+	},
+	{
+		id: "itm-sample-delivery",
+		name: "Delivery and setup",
+		description: null,
+		unit: "trip",
+		unitPrice: "35.00",
+		currency: "USD",
+		taxCode: "EXEMPT",
+		rate: null,
+		hsnSac: null,
+		code: "SVC-DELIV",
+	},
+];

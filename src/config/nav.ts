@@ -5,7 +5,9 @@ import {
 	FileScan,
 	FileText,
 	type LucideIcon,
+	Package,
 	ScrollText,
+	Users,
 } from "lucide-react";
 
 export interface NavItem {
@@ -23,5 +25,7 @@ export const mainNav: NavItem[] = [
 	{ to: "/contracts", label: "Contracts", icon: ScrollText },
 	{ to: "/import", label: "Import", icon: FileScan },
 	{ to: "/reminders", label: "Reminders", icon: BellRing },
+	{ to: "/clients", label: "Clients", icon: Users },
+	{ to: "/catalog", label: "Catalog", icon: Package },
 	{ to: "/settings/business", label: "Business", icon: Building2 },
 ];

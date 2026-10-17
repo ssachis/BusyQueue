@@ -15,6 +15,10 @@ import { Route as RemindersRouteImport } from './routes/reminders'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiImportsRouteImport } from './routes/api/imports'
 import { Route as ApiRunsRouteImport } from './routes/api/runs'
+import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
+import { Route as CatalogIdRouteImport } from './routes/catalog/$id'
+import { Route as ClientsIndexRouteImport } from './routes/clients/index'
+import { Route as ClientsIdRouteImport } from './routes/clients/$id'
 import { Route as ContractsIndexRouteImport } from './routes/contracts/index'
 import { Route as ContractsContractIdRouteImport } from './routes/contracts/$contractId'
 import { Route as ContractsNewRouteImport } from './routes/contracts/new'
@@ -51,6 +55,26 @@ const ApiImportsRoute = ApiImportsRouteImport.update({
 const ApiRunsRoute = ApiRunsRouteImport.update({
   id: '/api/runs',
   path: '/api/runs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CatalogIndexRoute = CatalogIndexRouteImport.update({
+  id: '/catalog/',
+  path: '/catalog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CatalogIdRoute = CatalogIdRouteImport.update({
+  id: '/catalog/$id',
+  path: '/catalog/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientsIndexRoute = ClientsIndexRouteImport.update({
+  id: '/clients/',
+  path: '/clients/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientsIdRoute = ClientsIdRouteImport.update({
+  id: '/clients/$id',
+  path: '/clients/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContractsIndexRoute = ContractsIndexRouteImport.update({
@@ -96,11 +120,15 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/imports': typeof ApiImportsRoute
   '/api/runs': typeof ApiRunsRoute
+  '/catalog/$id': typeof CatalogIdRoute
+  '/clients/$id': typeof ClientsIdRoute
   '/contracts/$contractId': typeof ContractsContractIdRoute
   '/contracts/new': typeof ContractsNewRoute
   '/documents/$id': typeof DocumentsIdRoute
   '/documents/new': typeof DocumentsNewRoute
   '/settings/business': typeof SettingsBusinessRoute
+  '/catalog/': typeof CatalogIndexRoute
+  '/clients/': typeof ClientsIndexRoute
   '/contracts/': typeof ContractsIndexRoute
   '/documents/': typeof DocumentsIndexRoute
 }
@@ -111,11 +139,15 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/imports': typeof ApiImportsRoute
   '/api/runs': typeof ApiRunsRoute
+  '/catalog/$id': typeof CatalogIdRoute
+  '/clients/$id': typeof ClientsIdRoute
   '/contracts/$contractId': typeof ContractsContractIdRoute
   '/contracts/new': typeof ContractsNewRoute
   '/documents/$id': typeof DocumentsIdRoute
   '/documents/new': typeof DocumentsNewRoute
   '/settings/business': typeof SettingsBusinessRoute
+  '/catalog': typeof CatalogIndexRoute
+  '/clients': typeof ClientsIndexRoute
   '/contracts': typeof ContractsIndexRoute
   '/documents': typeof DocumentsIndexRoute
 }
@@ -127,11 +159,15 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/imports': typeof ApiImportsRoute
   '/api/runs': typeof ApiRunsRoute
+  '/catalog/$id': typeof CatalogIdRoute
+  '/clients/$id': typeof ClientsIdRoute
   '/contracts/$contractId': typeof ContractsContractIdRoute
   '/contracts/new': typeof ContractsNewRoute
   '/documents/$id': typeof DocumentsIdRoute
   '/documents/new': typeof DocumentsNewRoute
   '/settings/business': typeof SettingsBusinessRoute
+  '/catalog/': typeof CatalogIndexRoute
+  '/clients/': typeof ClientsIndexRoute
   '/contracts/': typeof ContractsIndexRoute
   '/documents/': typeof DocumentsIndexRoute
 }
@@ -144,11 +180,15 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/imports'
     | '/api/runs'
+    | '/catalog/$id'
+    | '/clients/$id'
     | '/contracts/$contractId'
     | '/contracts/new'
     | '/documents/$id'
     | '/documents/new'
     | '/settings/business'
+    | '/catalog/'
+    | '/clients/'
     | '/contracts/'
     | '/documents/'
   fileRoutesByTo: FileRoutesByTo
@@ -159,11 +199,15 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/imports'
     | '/api/runs'
+    | '/catalog/$id'
+    | '/clients/$id'
     | '/contracts/$contractId'
     | '/contracts/new'
     | '/documents/$id'
     | '/documents/new'
     | '/settings/business'
+    | '/catalog'
+    | '/clients'
     | '/contracts'
     | '/documents'
   id:
@@ -174,11 +218,15 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/imports'
     | '/api/runs'
+    | '/catalog/$id'
+    | '/clients/$id'
     | '/contracts/$contractId'
     | '/contracts/new'
     | '/documents/$id'
     | '/documents/new'
     | '/settings/business'
+    | '/catalog/'
+    | '/clients/'
     | '/contracts/'
     | '/documents/'
   fileRoutesById: FileRoutesById
@@ -190,11 +238,15 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiImportsRoute: typeof ApiImportsRoute
   ApiRunsRoute: typeof ApiRunsRoute
+  CatalogIdRoute: typeof CatalogIdRoute
+  ClientsIdRoute: typeof ClientsIdRoute
   ContractsContractIdRoute: typeof ContractsContractIdRoute
   ContractsNewRoute: typeof ContractsNewRoute
   DocumentsIdRoute: typeof DocumentsIdRoute
   DocumentsNewRoute: typeof DocumentsNewRoute
   SettingsBusinessRoute: typeof SettingsBusinessRoute
+  CatalogIndexRoute: typeof CatalogIndexRoute
+  ClientsIndexRoute: typeof ClientsIndexRoute
   ContractsIndexRoute: typeof ContractsIndexRoute
   DocumentsIndexRoute: typeof DocumentsIndexRoute
 }
@@ -241,6 +293,34 @@ declare module '@tanstack/react-router' {
       path: '/api/runs'
       fullPath: '/api/runs'
       preLoaderRoute: typeof ApiRunsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalog/': {
+      id: '/catalog/'
+      path: '/catalog'
+      fullPath: '/catalog/'
+      preLoaderRoute: typeof CatalogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalog/$id': {
+      id: '/catalog/$id'
+      path: '/catalog/$id'
+      fullPath: '/catalog/$id'
+      preLoaderRoute: typeof CatalogIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clients/': {
+      id: '/clients/'
+      path: '/clients'
+      fullPath: '/clients/'
+      preLoaderRoute: typeof ClientsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clients/$id': {
+      id: '/clients/$id'
+      path: '/clients/$id'
+      fullPath: '/clients/$id'
+      preLoaderRoute: typeof ClientsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contracts/': {
@@ -302,11 +382,15 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiImportsRoute: ApiImportsRoute,
   ApiRunsRoute: ApiRunsRoute,
+  CatalogIdRoute: CatalogIdRoute,
+  ClientsIdRoute: ClientsIdRoute,
   ContractsContractIdRoute: ContractsContractIdRoute,
   ContractsNewRoute: ContractsNewRoute,
   DocumentsIdRoute: DocumentsIdRoute,
   DocumentsNewRoute: DocumentsNewRoute,
   SettingsBusinessRoute: SettingsBusinessRoute,
+  CatalogIndexRoute: CatalogIndexRoute,
+  ClientsIndexRoute: ClientsIndexRoute,
   ContractsIndexRoute: ContractsIndexRoute,
   DocumentsIndexRoute: DocumentsIndexRoute,
 }
