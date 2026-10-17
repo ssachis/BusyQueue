@@ -59,8 +59,7 @@ function rowStatus(r: InvoiceRow): RowStatus {
 	if (r.run.totalMinor > 0) return { label: "Flagged", variant: "destructive" };
 	if (r.run.failedTools > 0)
 		return { label: "Price check failed", variant: "warning" };
-	if (!r.run.toolLogged)
-		return { label: "Re-run", variant: "outline" };
+	if (!r.run.toolLogged) return { label: "Re-run", variant: "outline" };
 	return { label: "Clean", variant: "success" };
 }
 
@@ -262,53 +261,53 @@ function FailuresPanel({ summary }: { summary: ReviewSummary }) {
 						Show the names and units that don't match
 					</summary>
 					<div className="mt-4 grid gap-4 md:grid-cols-2">
-					{failures.vendorVariants.length > 0 ? (
-						<section className="space-y-2">
-							<h3 className="font-medium">Vendor names on the invoice</h3>
-							<ul className="space-y-1">
-								{failures.vendorVariants.map((vv) => (
-									<li key={vv.printed} className="flex justify-between gap-2">
-										<span>
-											“{vv.printed}”
-											{vv.canonical ? (
+						{failures.vendorVariants.length > 0 ? (
+							<section className="space-y-2">
+								<h3 className="font-medium">Vendor names on the invoice</h3>
+								<ul className="space-y-1">
+									{failures.vendorVariants.map((vv) => (
+										<li key={vv.printed} className="flex justify-between gap-2">
+											<span>
+												“{vv.printed}”
+												{vv.canonical ? (
+													<span className="text-muted-foreground">
+														{" "}
+														→ {vv.canonical}
+													</span>
+												) : null}
+											</span>
+											<span className="text-muted-foreground">
+												{plural(vv.invoiceIds.length, "invoice")}
+											</span>
+										</li>
+									))}
+								</ul>
+							</section>
+						) : null}
+						{failures.unitVariants.length > 0 ? (
+							<section className="space-y-2">
+								<h3 className="font-medium">Units billed vs the contract</h3>
+								<ul className="space-y-1">
+									{failures.unitVariants.map((u) => (
+										<li
+											key={`${u.item}|${u.billedUnit}`}
+											className="flex justify-between gap-2"
+										>
+											<span>
+												{u.item}: “{u.billedUnit}”
 												<span className="text-muted-foreground">
 													{" "}
-													→ {vv.canonical}
+													vs {u.contractUnits.join(" / ")}
 												</span>
-											) : null}
-										</span>
-										<span className="text-muted-foreground">
-											{plural(vv.invoiceIds.length, "invoice")}
-										</span>
-									</li>
-								))}
-							</ul>
-						</section>
-					) : null}
-					{failures.unitVariants.length > 0 ? (
-						<section className="space-y-2">
-							<h3 className="font-medium">Units billed vs the contract</h3>
-							<ul className="space-y-1">
-								{failures.unitVariants.map((u) => (
-									<li
-										key={`${u.item}|${u.billedUnit}`}
-										className="flex justify-between gap-2"
-									>
-										<span>
-											{u.item}: “{u.billedUnit}”
-											<span className="text-muted-foreground">
-												{" "}
-												vs {u.contractUnits.join(" / ")}
 											</span>
-										</span>
-										<span className="text-muted-foreground">
-											{plural(u.invoiceIds.length, "invoice")}
-										</span>
-									</li>
-								))}
-							</ul>
-						</section>
-					) : null}
+											<span className="text-muted-foreground">
+												{plural(u.invoiceIds.length, "invoice")}
+											</span>
+										</li>
+									))}
+								</ul>
+							</section>
+						) : null}
 					</div>
 				</details>
 			</CardContent>
@@ -353,7 +352,8 @@ function InvoicePanel({
 					<div className="space-y-1.5">
 						<CardTitle>{invoice.invoiceNumber}</CardTitle>
 						<CardDescription>
-							{invoice.vendor} · {money(
+							{invoice.vendor} ·{" "}
+							{money(
 								toMinor(invoice.statedTotal, invoice.currency).minor,
 								invoice.currency,
 							)}
@@ -377,19 +377,19 @@ function InvoicePanel({
 								Run details
 							</summary>
 							<div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-							<span>{run.model ?? "model unknown"}</span>
-							<span>{run.toolCalls} tool calls</span>
-							<span>{utc(run.startedAt)}</span>
-							{run.prismTraceId ? (
-								<span>
-									PRISM trace{" "}
-									<code className="font-mono">
-										{run.prismTraceId.slice(0, 8)}
-									</code>{" "}
-									· session{" "}
-									<code className="font-mono">{run.id.slice(0, 8)}</code>
-								</span>
-							) : null}
+								<span>{run.model ?? "model unknown"}</span>
+								<span>{run.toolCalls} tool calls</span>
+								<span>{utc(run.startedAt)}</span>
+								{run.prismTraceId ? (
+									<span>
+										PRISM trace{" "}
+										<code className="font-mono">
+											{run.prismTraceId.slice(0, 8)}
+										</code>{" "}
+										· session{" "}
+										<code className="font-mono">{run.id.slice(0, 8)}</code>
+									</span>
+								) : null}
 							</div>
 						</details>
 						<div className="flex flex-wrap gap-1.5">
