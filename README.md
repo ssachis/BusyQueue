@@ -13,6 +13,7 @@
 bun install
 cp .env.example .dev.vars
 bun run cf-typegen   # generates worker-configuration.d.ts from wrangler.jsonc
+bun run db:migrate:local && bun run db:seed:local   # local D1 + sample data
 bun run dev
 ```
 
@@ -71,6 +72,9 @@ by default, and the user's choice is stored in `localStorage`.
 | `cf-typegen` | Regenerate Worker binding types |
 | `typecheck` / `test` | `tsc --noEmit` / `vitest run` |
 | `check` / `lint` / `format` | Biome |
+| `db:generate` | Generate a migration from `src/db/schema/` (after rebasing on `main`) |
+| `db:migrate:local` / `db:migrate:remote` | Apply migrations to local / deployed D1 |
+| `db:seed:local` / `db:seed:remote` | Upsert `data/` into D1 (never touches runs or approvals) |
 
 Add shadcn components with `bunx shadcn@latest add <name>`; `components.json`
 is already configured for the `#/` alias.
