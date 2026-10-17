@@ -2,12 +2,7 @@
  * Parse the generated data files (`data/*.csv`) into the shared types. Pure:
  * pass in the file text. Used by the review page and, later, the D1 seed.
  */
-import {
-	AnswerKeyRow,
-	Invoice,
-	Payment,
-	PriceRow,
-} from "./types.ts";
+import { AnswerKeyRow, Invoice, Payment, PriceRow } from "./types.ts";
 
 export function parseCsv(text: string): Record<string, string>[] {
 	const lines = text.trim().split("\n");

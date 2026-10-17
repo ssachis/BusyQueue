@@ -56,7 +56,9 @@ describe("disputeDraft", () => {
 		expect(clean && disputeDraft(clean)).toBe("");
 	});
 	it("lists each finding and the code-computed total", () => {
-		const flagged = model.rows.find((r) => r.findings.length > 1) ?? model.rows.find((r) => r.status === "flagged");
+		const flagged =
+			model.rows.find((r) => r.findings.length > 1) ??
+			model.rows.find((r) => r.status === "flagged");
 		expect(flagged).toBeDefined();
 		if (!flagged) return;
 		const text = disputeDraft(flagged);

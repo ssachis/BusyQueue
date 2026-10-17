@@ -15,7 +15,11 @@ import { Textarea } from "#/components/ui/textarea.tsx";
 import { formatMoney, toMinor } from "#/lib/money/index.ts";
 import { cn } from "#/lib/utils.ts";
 import { review } from "./data.ts";
-import { disputeDraft, type InvoiceReview, type ReviewStatus } from "./review.ts";
+import {
+	disputeDraft,
+	type InvoiceReview,
+	type ReviewStatus,
+} from "./review.ts";
 
 const STORAGE_KEY = "busyq.approvals.v1";
 
@@ -62,15 +66,26 @@ const KIND_LABEL: Record<string, string> = {
 	orphan_payment: "Payment with no invoice",
 };
 
-const usd = (minor: number, currency = "USD") => formatMoney({ minor, currency });
+const usd = (minor: number, currency = "USD") =>
+	formatMoney({ minor, currency });
 
-function Stat({ label, value, note }: { label: string; value: string; note?: string }) {
+function Stat({
+	label,
+	value,
+	note,
+}: {
+	label: string;
+	value: string;
+	note?: string;
+}) {
 	return (
 		<Card className="gap-1 py-4">
 			<CardContent className="space-y-1">
 				<div className="text-sm text-muted-foreground">{label}</div>
 				<div className="text-2xl font-semibold tracking-tight">{value}</div>
-				{note ? <div className="text-xs text-muted-foreground">{note}</div> : null}
+				{note ? (
+					<div className="text-xs text-muted-foreground">{note}</div>
+				) : null}
 			</CardContent>
 		</Card>
 	);
@@ -79,7 +94,10 @@ function Stat({ label, value, note }: { label: string; value: string; note?: str
 export function ReviewPage() {
 	const { rows, orphans, totals } = review;
 	const [selectedId, setSelectedId] = useState<string>(
-		() => rows.find((r) => r.status === "flagged")?.invoice.id ?? rows[0]?.invoice.id ?? "",
+		() =>
+			rows.find((r) => r.status === "flagged")?.invoice.id ??
+			rows[0]?.invoice.id ??
+			"",
 	);
 	const [approvals, setApprovals] = useState<Approval[]>([]);
 	const [edits, setEdits] = useState<Record<string, string>>({});
@@ -135,7 +153,9 @@ export function ReviewPage() {
 					<Card className="gap-4">
 						<CardHeader>
 							<CardTitle>Invoices</CardTitle>
-							<CardDescription>All amounts come from code, never from the model.</CardDescription>
+							<CardDescription>
+								All amounts come from code, never from the model.
+							</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-3">
 							<div className="flex flex-wrap gap-1.5">
@@ -162,19 +182,25 @@ export function ReviewPage() {
 											)}
 										>
 											<span className="min-w-0">
-												<span className="block truncate font-medium">{r.invoice.invoiceNumber}</span>
+												<span className="block truncate font-medium">
+													{r.invoice.invoiceNumber}
+												</span>
 												<span className="block truncate text-xs text-muted-foreground">
 													{r.invoice.vendor}
 												</span>
 											</span>
 											<span className="flex shrink-0 items-center gap-2">
 												{r.impact.minor > 0 ? (
-													<span className="text-xs font-medium">{usd(r.impact.minor)}</span>
+													<span className="text-xs font-medium">
+														{usd(r.impact.minor)}
+													</span>
 												) : null}
 												{approvedIds.has(r.invoice.id) ? (
 													<Badge variant="info">Approved</Badge>
 												) : (
-													<Badge variant={STATUS[r.status].variant}>{STATUS[r.status].label}</Badge>
+													<Badge variant={STATUS[r.status].variant}>
+														{STATUS[r.status].label}
+													</Badge>
 												)}
 											</span>
 										</button>
@@ -193,9 +219,13 @@ export function ReviewPage() {
 						<InvoiceDetail
 							key={selected.invoice.id}
 							r={selected}
-							approved={approvals.find((a) => a.invoiceId === selected.invoice.id)}
+							approved={approvals.find(
+								(a) => a.invoiceId === selected.invoice.id,
+							)}
 							draft={edits[selected.invoice.id] ?? disputeDraft(selected)}
-							onDraft={(text) => setEdits((e) => ({ ...e, [selected.invoice.id]: text }))}
+							onDraft={(text) =>
+								setEdits((e) => ({ ...e, [selected.invoice.id]: text }))
+							}
 							onApprove={(text) => approve(selected, text)}
 						/>
 					) : null}
@@ -206,15 +236,21 @@ export function ReviewPage() {
 						<CardHeader>
 							<CardTitle>Payments with no invoice</CardTitle>
 							<CardDescription>
-								Money that left with no matching invoice on file. Review before the next payment run.
+								Money that left with no matching invoice on file. Review before
+								the next payment run.
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
 							<ul className="divide-y rounded-md border text-sm">
 								{orphans.map((f) => (
-									<li key={f.paymentId} className="flex items-start justify-between gap-4 px-3 py-2">
+									<li
+										key={f.paymentId}
+										className="flex items-start justify-between gap-4 px-3 py-2"
+									>
 										<span>{f.detail}</span>
-										<span className="shrink-0 font-medium">{usd(f.impactMinor, f.currency)}</span>
+										<span className="shrink-0 font-medium">
+											{usd(f.impactMinor, f.currency)}
+										</span>
 									</li>
 								))}
 							</ul>
@@ -249,7 +285,10 @@ function InvoiceDetail({
 				</CardTitle>
 				<CardDescription>
 					{invoice.vendor} · issued {invoice.issueDate} · stated total{" "}
-					{usd(toMinor(invoice.statedTotal, invoice.currency).minor, invoice.currency)}
+					{usd(
+						toMinor(invoice.statedTotal, invoice.currency).minor,
+						invoice.currency,
+					)}
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-4">
@@ -263,10 +302,16 @@ function InvoiceDetail({
 									className="flex items-start justify-between gap-4 px-3 py-2"
 								>
 									<span className="space-y-1">
-										<Badge variant="destructive">{KIND_LABEL[f.kind] ?? f.kind}</Badge>
-										<span className="block text-muted-foreground">{f.detail}</span>
+										<Badge variant="destructive">
+											{KIND_LABEL[f.kind] ?? f.kind}
+										</Badge>
+										<span className="block text-muted-foreground">
+											{f.detail}
+										</span>
 									</span>
-									<span className="shrink-0 font-medium">{usd(f.impactMinor, f.currency)}</span>
+									<span className="shrink-0 font-medium">
+										{usd(f.impactMinor, f.currency)}
+									</span>
 								</li>
 							))}
 						</ul>
@@ -281,14 +326,19 @@ function InvoiceDetail({
 					<section className="space-y-2">
 						<h3 className="text-sm font-medium">No agreed price found</h3>
 						<p className="text-xs text-muted-foreground">
-							The v1 lookup needs vendor, item and unit to match the contract exactly. These lines
-							could not be checked, so any overcharge on them is invisible.
+							The v1 lookup needs vendor, item and unit to match the contract
+							exactly. These lines could not be checked, so any overcharge on
+							them is invisible.
 						</p>
 						<ul className="divide-y rounded-md border text-sm">
 							{unpriced.map((u) => (
-								<li key={u.lineNo} className="flex items-start justify-between gap-4 px-3 py-2">
+								<li
+									key={u.lineNo}
+									className="flex items-start justify-between gap-4 px-3 py-2"
+								>
 									<span>
-										Line {u.lineNo}: {u.item} billed per “{u.unit}” by “{invoice.vendor}”
+										Line {u.lineNo}: {u.item} billed per “{u.unit}” by “
+										{invoice.vendor}”
 									</span>
 									<Badge variant="warning">{u.error.code}</Badge>
 								</li>
@@ -299,7 +349,8 @@ function InvoiceDetail({
 
 				{status === "clean" ? (
 					<p className="text-sm text-muted-foreground">
-						Every line matches the contract and the totals add up. Nothing to send.
+						Every line matches the contract and the totals add up. Nothing to
+						send.
 					</p>
 				) : null}
 
@@ -309,8 +360,8 @@ function InvoiceDetail({
 						<section className="space-y-2">
 							<h3 className="text-sm font-medium">Dispute draft</h3>
 							<p className="text-xs text-muted-foreground">
-								A template built from the findings above; the agent will write the prose later.
-								Nothing is sent without Approve.
+								A template built from the findings above; the agent will write
+								the prose later. Nothing is sent without Approve.
 							</p>
 							<Textarea
 								value={approved ? approved.draft : draft}
@@ -323,7 +374,8 @@ function InvoiceDetail({
 								<div className="flex items-center gap-2 text-sm text-muted-foreground">
 									<Check className="size-4 text-success" />
 									Approved {new Date(approved.at).toLocaleString()} for{" "}
-									{usd(approved.amountMinor, approved.currency)}. The draft is now read-only.
+									{usd(approved.amountMinor, approved.currency)}. The draft is
+									now read-only.
 								</div>
 							) : (
 								<Button onClick={() => onApprove(draft)}>
