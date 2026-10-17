@@ -1,10 +1,16 @@
 /**
- * Pure review model for the owner's page: runs the v1 rules over every invoice
+ * Pure review model for the owner's page: runs the rules (v1 or v2 lookup) over every invoice
  * and builds a vendor dispute draft from the findings. No I/O, no AI; every
  * amount comes from the rules engine.
  */
 
-import type { Finding, Invoice, Payment, PriceRow } from "#/lib/busyq/types.ts";
+import type {
+	Finding,
+	FindingKind,
+	Invoice,
+	Payment,
+	PriceRow,
+} from "#/lib/busyq/types.ts";
 import { formatMoney, type Money } from "#/lib/money/index.ts";
 import {
 	calculateImpact,
@@ -12,6 +18,8 @@ import {
 	checkInvoicePayments,
 	compareLines,
 	findOrphanPayments,
+	lookupPrices,
+	type PriceLookup,
 	type UnpricedLine,
 } from "#/lib/rules/index.ts";
 
@@ -35,6 +43,8 @@ export type ReviewModel = {
 		recoverable: Money;
 		unpricedLines: number;
 		orphanTotal: Money;
+		/** Recoverable money split by cause, largest first. */
+		byKind: { kind: FindingKind; count: number; impact: Money }[];
 	};
 };
 
@@ -43,9 +53,10 @@ export function buildReview(
 	prices: readonly PriceRow[],
 	payments: readonly Payment[],
 	currency = "USD",
+	lookup: PriceLookup = lookupPrices,
 ): ReviewModel {
 	const rows: InvoiceReview[] = invoices.map((invoice) => {
-		const compared = compareLines(invoice, prices);
+		const compared = compareLines(invoice, prices, lookup);
 		const findings = [
 			...compared.findings,
 			...checkInvoice(invoice),
@@ -67,15 +78,23 @@ export function buildReview(
 	});
 	const orphans = findOrphanPayments(invoices, payments);
 	const all = [...rows.flatMap((r) => r.findings), ...orphans];
+	const summary = calculateImpact(all, currency);
 	return {
 		rows,
 		orphans,
 		totals: {
 			invoices: rows.length,
 			flagged: rows.filter((r) => r.status === "flagged").length,
-			recoverable: calculateImpact(all, currency).total,
+			recoverable: summary.total,
 			unpricedLines: rows.reduce((n, r) => n + r.unpriced.length, 0),
 			orphanTotal: calculateImpact(orphans, currency).total,
+			byKind: Object.entries(summary.byKind)
+				.map(([kind, v]) => ({
+					kind: kind as FindingKind,
+					count: v.count,
+					impact: v.impact,
+				}))
+				.sort((a, b) => b.impact.minor - a.impact.minor),
 		},
 	};
 }

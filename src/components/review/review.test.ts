@@ -5,6 +5,7 @@ import {
 	parsePayments,
 	parsePriceList,
 } from "#/lib/busyq/load.ts";
+import { lookupPricesV2 } from "#/lib/rules/index.ts";
 import { buildReview, disputeDraft } from "./review.ts";
 
 const dir = new URL("../../../data/", import.meta.url);
@@ -65,5 +66,31 @@ describe("disputeDraft", () => {
 		expect(text).toContain(`Subject: Invoice ${flagged.invoice.invoiceNumber}`);
 		for (const f of flagged.findings) expect(text).toContain(f.detail);
 		expect(text).toMatch(/Total to credit or refund: \$[\d,]+\.\d{2}\./);
+	});
+});
+
+describe("review with the v2 lookup", () => {
+	const v2 = buildReview(
+		invoices,
+		parsePriceList(read("price_list.csv")),
+		parsePayments(read("payments.csv")),
+		"USD",
+		lookupPricesV2,
+	);
+	it("checks every line and finds more money than v1", () => {
+		expect(model.totals.unpricedLines).toBeGreaterThan(0);
+		expect(v2.totals.unpricedLines).toBe(0);
+		expect(v2.totals.recoverable.minor).toBeGreaterThan(
+			model.totals.recoverable.minor,
+		);
+	});
+	it("splits the total by cause, largest first, and the parts add up", () => {
+		const parts = v2.totals.byKind;
+		expect(parts.map((p) => p.impact.minor)).toEqual(
+			[...parts.map((p) => p.impact.minor)].sort((a, b) => b - a),
+		);
+		expect(parts.reduce((n, p) => n + p.impact.minor, 0)).toBe(
+			v2.totals.recoverable.minor,
+		);
 	});
 });
