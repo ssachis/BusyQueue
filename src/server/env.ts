@@ -17,6 +17,19 @@ const serverEnvSchema = z.object({
 	// ── BusyQ agent ──
 	/** Model for agent runs (tool calling). Overrides NICRRON_MODEL for the agent only. */
 	AGENT_MODEL: z.string().min(1).default("anthropic/claude-sonnet-5-5"),
+	/**
+	 * Comma-separated models Nicrron cascades to, in order, when AGENT_MODEL
+	 * is rate-limited, down or unknown (sent as the `models` fallback array).
+	 * Each one must support tool calling.
+	 */
+	AGENT_FALLBACK_MODELS: optionalString
+		.default("openai/gpt-6-sol,anthropic/claude-haiku-5-5")
+		.transform((v) =>
+			v
+				.split(",")
+				.map((m) => m.trim())
+				.filter((m) => m.length > 0),
+		),
 	/** Default price-lookup version when a run doesn't ask for one. */
 	AGENT_VERSION: z.enum(["v1", "v2"]).default("v1"),
 

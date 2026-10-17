@@ -39,7 +39,10 @@ export async function executeRun(input: {
 		{ invoiceId: input.invoiceId, version },
 		{
 			store,
-			model: nicrronChatModel(getNicrron(env), env.AGENT_MODEL),
+			model: nicrronChatModel(getNicrron(env), {
+				model: env.AGENT_MODEL,
+				fallbacks: env.AGENT_FALLBACK_MODELS,
+			}),
 			modelName: env.AGENT_MODEL,
 			tracerFor: (runId) =>
 				createRunTracer(config, { runId, invoiceId: input.invoiceId, version }),

@@ -54,6 +54,43 @@ curl -s https://m-talks2.buddhsen-work.workers.dev/api/runs \
   never computes an amount. The draft tool rejects any dollar figure the code
   didn't produce (in testing it rejected an invented $75.00).
 
+### Nicrron talking point (20 s)
+
+Every model call goes through Nicrron, and the run response has a `gateway` block, for example
+`{"requestedModel":"anthropic/claude-sonnet-5-5","modelCalls":6,"modelsUsed":["anthropic/claude-sonnet-5-5"],"fallbacks":0,"cacheHits":0,"costUsd":"0.040194"}`.
+The same fields are on each PRISM `llm` span (`requested_model`, `resolved_model`,
+`fallback_used`, `cache_hit`, `cost_usd`, `nicrron_request_id`) and on the root span.
+
+What we checked against the live gateway (2026-10-17):
+- **Fallback array.** The agent sends `models: [AGENT_MODEL, ...AGENT_FALLBACK_MODELS]`
+  (default `openai/gpt-6-sol`, then `anthropic/claude-haiku-5-5`). The response's
+  `model` field names the model that answered. There is no separate fallback
+  header. With an unknown primary model, a request with no list returns
+  `404 Model not found`. With the list, Nicrron moves on to the next model.
+  A live run with `AGENT_MODEL=anthropic/claude-nonexistent-9` still completed
+  on `openai/gpt-6-sol`: 8 of 8 calls fell back and it still found the $6.00 on inv-1003.
+  PRISM run `5cdbfc37-c68c-42ce-b924-05d374cec0bb`,
+  trace `3369f949-5fee-4a32-bd4c-6bbb25cd4286`.
+- **Routing presets with tools.** All five presets returned a correct
+  `get_invoice` tool call:
+  - `nicrron/auto` and `nicrron/fastest` went to `anthropic/claude-haiku-5-5`
+  - `nicrron/cheapest` went to `mistral/ministral-3b`
+  - `nicrron/reasoning` went to `deepseek/deepseek-v4-pro`
+  - `nicrron/coding` went to `anthropic/claude-opus-5-5`
+
+  `openai/gpt-6.1-sol` rejects function tools (502), so it isn't in the fallback list.
+- **Exact cache.** At temperature 0, a repeated plain request gets
+  `X-Nicrron-Cache: HIT`, returns in about 200 ms and costs $0.
+  **Requests that carry `tools` were never cached**, even with `x-nicrron-cache: true`.
+  Agent runs therefore show `cacheHits: 0` on a repeat run (two back-to-back inv-1003
+  runs: 0 and 0). That is honest, not a bug.
+- **Cost.** The completion body has no cost field. Its `usage` field has
+  `cache_read_tokens` (provider prompt-cache pass-through). The completion `id`
+  (also `x-request-id`) looks up `GET /v1/generation?id=…` → `total_cost`. That
+  endpoint isn't in the public docs but answers immediately. We read the cost as an
+  exact decimal string and add it up with big.js. A run's cost appears only
+  when every call reported one.
+
 ## 3. The failure, the alert, the cluster (60 s)
 
 Recorded v1 batch against the deployed app, 40 invoices:

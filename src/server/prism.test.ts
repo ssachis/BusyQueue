@@ -160,6 +160,33 @@ describe("RunTracer", () => {
 		]);
 	});
 
+	it("adds per-call metadata to llm spans and run metadata to the root", async () => {
+		const { calls, fetchImpl } = recorder();
+		const run = new RunTracer(config, options, fetchImpl);
+		await run.traceModelCall(
+			"anthropic/claude-sonnet-5-5",
+			"audit",
+			async () => ({ model: "openai/gpt-6-sol" }),
+			(r) => ({
+				model: r.model,
+				metadata: { fallback_used: true, cost_usd: "0.0017" },
+			}),
+		);
+		await run.finish({ output: "done", metadata: { fallbacks: 1 } });
+		const [root, llm] = (
+			calls[0].body as { spans: Array<Record<string, unknown>> }
+		).spans;
+		expect(llm).toMatchObject({
+			model: "openai/gpt-6-sol",
+			metadata: { fallback_used: true, cost_usd: "0.0017", iteration: 1 },
+		});
+		expect(root.metadata).toMatchObject({
+			agent_version: "v1",
+			fallbacks: 1,
+			tool_calls: 0,
+		});
+	});
+
 	it("records a thrown tool error and rethrows it", async () => {
 		const { calls, fetchImpl } = recorder();
 		const run = new RunTracer(config, options, fetchImpl);
