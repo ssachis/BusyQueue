@@ -7,16 +7,19 @@
  * Drafts have no number. Every change writes to the activity log in the same
  * D1 batch; DB triggers keep issued and void documents locked regardless.
  */
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { getDb } from "#/db/index.ts";
 import { documentActivity } from "#/db/schema/activity.ts";
+import { documentPayments } from "#/db/schema/document-payments.ts";
 import { documentLines, documents } from "#/db/schema/documents.ts";
 import type {
 	BusinessCountry,
 	BusinessProfile,
 } from "#/lib/business/profile.ts";
+import { paymentSummary, takesPayments } from "#/lib/documents/status.ts";
 import { documentTotals, sellerSnapshot } from "#/lib/documents/totals.ts";
 import type {
+	DisplayStatus,
 	DocumentDraft,
 	DocumentStatus,
 	DocumentType,
@@ -97,17 +100,85 @@ export interface DocumentListRow {
 	currency: string;
 	/** Frozen total for issued/void; computed from the lines for drafts. */
 	totalMinor: number | null;
+	/** Lifecycle plus payment state, from `paymentSummary`. */
+	displayStatus: DisplayStatus;
+	/** Sum of active payments (issued payable documents only). */
+	paidMinor: number | null;
+	/** Still owed; null for drafts, void and types that take no payment. */
+	balanceMinor: number | null;
 	updatedAt: string;
 }
 
+type PaymentRow = typeof documentPayments.$inferSelect;
+
+/** Active payments of every document of the business, grouped by document. */
+async function activePaymentsByDocument(
+	businessId: string,
+): Promise<Map<string, PaymentRow[]>> {
+	const rows = await getDb()
+		.select({ payment: documentPayments })
+		.from(documentPayments)
+		.innerJoin(documents, eq(documents.id, documentPayments.documentId))
+		.where(
+			and(
+				eq(documents.businessId, businessId),
+				isNull(documentPayments.voidedAt),
+			),
+		);
+	const byDoc = new Map<string, PaymentRow[]>();
+	for (const { payment } of rows) {
+		const list = byDoc.get(payment.documentId);
+		if (list) list.push(payment);
+		else byDoc.set(payment.documentId, [payment]);
+	}
+	return byDoc;
+}
+
+/** Display status and balance of one row; falls back to the lifecycle on bad data. */
+function listSummary(
+	r: DocumentRow,
+	payments: readonly PaymentRow[],
+	today: string,
+): Pick<DocumentListRow, "displayStatus" | "paidMinor" | "balanceMinor"> {
+	try {
+		const s = paymentSummary({
+			type: r.type,
+			status: r.status,
+			totalMinor: r.totalMinor,
+			currency: r.currency,
+			dueDate: r.dueDate,
+			payments,
+			today,
+		});
+		const payable = r.status === "issued" && takesPayments(r.type);
+		return {
+			displayStatus: s.displayStatus,
+			paidMinor: payable ? s.paidMinor : null,
+			balanceMinor: payable ? Math.max(0, s.balanceMinor) : null,
+		};
+	} catch (err) {
+		console.error("[documents] could not derive status for", r.id, err);
+		return { displayStatus: r.status, paidMinor: null, balanceMinor: null };
+	}
+}
+
+/**
+ * Every document of the business with its derived display status and
+ * balance. Payments come from one joined query (no IN list, so no D1
+ * bind-limit worries); filtering and ordering happen in the page.
+ */
 export async function loadDocumentList(filter: {
 	type?: DocumentType;
 	status?: DocumentStatus;
+	/** The viewer's date for "overdue"; defaults to the server's UTC date. */
+	today?: string;
 }): Promise<DocumentListRow[]> {
 	const [rows, business] = await Promise.all([
-		listDocuments(filter),
+		listDocuments({ type: filter.type, status: filter.status }),
 		loadBusiness(),
 	]);
+	const today = filter.today ?? new Date().toISOString().slice(0, 10);
+	const payments = await activePaymentsByDocument(business.id);
 	const draftIds = new Set(
 		rows.filter((r) => r.status === "draft").map((r) => r.id),
 	);
@@ -155,6 +226,7 @@ export async function loadDocumentList(filter: {
 			r.status === "draft"
 				? draftTotal(seller, r, linesByDoc.get(r.id) ?? [])
 				: r.totalMinor,
+		...listSummary(r, payments.get(r.id) ?? [], today),
 		updatedAt: r.updatedAt,
 	}));
 }

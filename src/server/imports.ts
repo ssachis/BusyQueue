@@ -16,7 +16,14 @@ export const getImport = createServerFn({ method: "GET" })
 
 export const saveImport = createServerFn({ method: "POST" })
 	.validator((input: unknown) =>
-		z.object({ importId: z.uuid(), draft: ImportDraft }).parse(input),
+		z
+			.object({
+				importId: z.uuid(),
+				draft: ImportDraft,
+				/** Save even when the vendor and number are already on file. */
+				allowDuplicate: z.boolean().optional(),
+			})
+			.parse(input),
 	)
 	.handler(({ data }) => saveImportedInvoice(data));
 

@@ -22,6 +22,7 @@ export const getDocumentList = createServerFn({ method: "GET" })
 			.object({
 				type: z.enum(DOCUMENT_TYPES).optional(),
 				status: z.enum(DOCUMENT_STATUSES).optional(),
+				today: z.iso.date().optional(),
 			})
 			.parse(input ?? {}),
 	)

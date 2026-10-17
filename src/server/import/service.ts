@@ -10,18 +10,23 @@
  * has its own session as usual.
  */
 import { env as workerEnv } from "cloudflare:workers";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getDb } from "#/db/index.ts";
 import { invoiceLines, invoices } from "#/db/schema/busyq.ts";
 import { invoiceImports } from "#/db/schema/imports.ts";
 import type { AgentVersion } from "#/lib/busyq/types.ts";
 import type {
+	ExistingInvoice,
 	ImportErrorResponse,
 	ImportResponse,
 	ImportRunSummary,
-	SavedImport,
+	SaveImportResult,
 	StoredImport,
 } from "#/lib/import/api.ts";
+import {
+	findDuplicateInvoices,
+	normalizeInvoiceNumber,
+} from "#/lib/import/duplicates.ts";
 import {
 	correctedPaths,
 	draftToInvoice,
@@ -64,6 +69,30 @@ export interface ImportOptions {
 	sessionId?: string;
 	/** Where the file came from, on the root span (default "upload"). */
 	source?: "upload" | "inbox";
+}
+
+/**
+ * Stored invoices with the same vendor and invoice number as the draft.
+ * SQL narrows by the normalised number (same rule as
+ * `normalizeInvoiceNumber`); the pure check then compares vendors.
+ */
+async function storedDuplicates(draft: {
+	vendor: string;
+	invoiceNumber: string;
+}): Promise<ExistingInvoice[]> {
+	const number = normalizeInvoiceNumber(draft.invoiceNumber);
+	if (number === "") return [];
+	const rows = await getDb()
+		.select({
+			id: invoices.id,
+			vendor: invoices.vendorName,
+			invoiceNumber: invoices.invoiceNumber,
+		})
+		.from(invoices)
+		.where(
+			sql`upper(replace(replace(replace(replace(replace(${invoices.invoiceNumber}, ' ', ''), '#', ''), char(9), ''), char(10), ''), char(13), '')) = ${number}`,
+		);
+	return findDuplicateInvoices(draft, rows);
 }
 
 export async function importUpload(
@@ -178,12 +207,7 @@ export async function importUpload(
 				updatedAt: stamp(),
 			})
 			.where(eq(invoiceImports.id, id));
-		const existing = draft.invoiceNumber
-			? await db
-					.select({ id: invoices.id, vendor: invoices.vendorName })
-					.from(invoices)
-					.where(eq(invoices.invoiceNumber, draft.invoiceNumber))
-			: [];
+		const existing = await storedDuplicates(draft);
 
 		finishWith = {
 			output: {
@@ -235,12 +259,8 @@ export async function loadImport(
 		.where(eq(invoiceImports.id, importId));
 	if (!row) return null;
 	const draft = row.extracted;
-	const existing = draft?.invoiceNumber
-		? await db
-				.select({ id: invoices.id, vendor: invoices.vendorName })
-				.from(invoices)
-				.where(eq(invoices.invoiceNumber, draft.invoiceNumber))
-		: [];
+	// Same vendor + normalised number rule as upload and save.
+	const existing = draft ? await storedDuplicates(draft) : [];
 	return {
 		importId: row.id,
 		status: row.status,
@@ -296,11 +316,16 @@ export async function importFile(importId: string): Promise<Response | null> {
 	});
 }
 
-/** Save the reviewed draft as a new invoice. Saving twice returns the first invoice. */
+/**
+ * Save the reviewed draft as a new invoice. Saving twice returns the first
+ * invoice. If the vendor and invoice number are already on file the save is
+ * refused (`status: "duplicate"`) unless `allowDuplicate` is set.
+ */
 export async function saveImportedInvoice(input: {
 	importId: string;
 	draft: ImportDraft;
-}): Promise<SavedImport> {
+	allowDuplicate?: boolean;
+}): Promise<SaveImportResult> {
 	const env = getServerEnv();
 	const db = getDb();
 	const [row] = await db
@@ -310,6 +335,7 @@ export async function saveImportedInvoice(input: {
 	if (!row) throw new ImportError(`No import ${input.importId}`);
 	if (row.status === "saved" && row.invoiceId) {
 		return {
+			status: "saved",
 			invoiceId: row.invoiceId,
 			corrected: [],
 			prismTraceId: row.prismTraceId ?? "",
@@ -341,11 +367,37 @@ export async function saveImportedInvoice(input: {
 			invoice_id: invoiceId,
 			model: row.model,
 			corrected_fields: corrected.length,
+			allow_duplicate: input.allowDuplicate === true,
 		},
 		trajectory: false,
 	});
 	let finishWith: { output?: unknown; error?: unknown } = {};
 	try {
+		const existing = await tracer.traceToolCall(
+			"check_duplicate",
+			{
+				vendor: invoice.vendor,
+				invoiceNumber: invoice.invoiceNumber,
+				allowDuplicate: input.allowDuplicate === true,
+			},
+			async () => ({
+				ok: true,
+				data: await storedDuplicates(invoice),
+			}),
+		);
+		if (existing.data.length > 0 && !input.allowDuplicate) {
+			finishWith = {
+				output: {
+					refused: "duplicate",
+					existing: existing.data.map((e) => e.id),
+				},
+			};
+			return {
+				status: "duplicate",
+				existing: existing.data,
+				prismTraceId: tracer.traceId,
+			};
+		}
 		await tracer.traceToolCall(
 			"save_invoice",
 			{ invoiceId, lines: invoice.lines.length, corrected },
@@ -380,7 +432,12 @@ export async function saveImportedInvoice(input: {
 	} finally {
 		await tracer.finish(finishWith);
 	}
-	return { invoiceId, corrected, prismTraceId: tracer.traceId };
+	return {
+		status: "saved",
+		invoiceId,
+		corrected,
+		prismTraceId: tracer.traceId,
+	};
 }
 
 /** Audit a saved import with the BusyQ agent (same path as POST /api/runs). */

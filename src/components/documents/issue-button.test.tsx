@@ -109,4 +109,60 @@ describe("IssueButton", () => {
 		expect(await screen.findByText("INV-0002")).toBeTruthy();
 		expect(screen.getByText("Void")).toBeTruthy();
 	});
+
+	it("saves pending edits first, then issues", async () => {
+		const order: string[] = [];
+		let finishSave: (ok: boolean) => void = () => {};
+		const beforeIssue = vi.fn(
+			() =>
+				new Promise<boolean>((r) => {
+					order.push("save");
+					finishSave = r;
+				}),
+		);
+		issueDocument.mockImplementation(async () => {
+			order.push("issue");
+			return { documentId: "doc-1", number: "INV-0009" };
+		});
+		wrap(
+			<IssueButton
+				documentId="doc-1"
+				status="draft"
+				beforeIssue={beforeIssue}
+			/>,
+		);
+		fireEvent.click(screen.getByRole("button", { name: "Issue" }));
+		fireEvent.click(screen.getByRole("button", { name: "Issue now" }));
+		expect(await screen.findByText("Saving…")).toBeTruthy();
+		expect(issueDocument).not.toHaveBeenCalled();
+
+		finishSave(true);
+		expect(await screen.findByText("INV-0009")).toBeTruthy();
+		expect(order).toEqual(["save", "issue"]);
+	});
+
+	it("does not issue when the save fails", async () => {
+		const beforeIssue = vi.fn(async () => false);
+		wrap(
+			<IssueButton
+				documentId="doc-1"
+				status="draft"
+				beforeIssue={beforeIssue}
+			/>,
+		);
+		fireEvent.click(screen.getByRole("button", { name: "Issue" }));
+		fireEvent.click(screen.getByRole("button", { name: "Issue now" }));
+		await waitFor(() => expect(beforeIssue).toHaveBeenCalled());
+		expect(await screen.findByRole("button", { name: "Issue" })).toBeTruthy();
+		expect(issueDocument).not.toHaveBeenCalled();
+		expect(invalidate).not.toHaveBeenCalled();
+	});
+
+	it("is disabled while the editor is busy", () => {
+		wrap(<IssueButton documentId="doc-1" status="draft" disabled />);
+		expect(
+			(screen.getByRole("button", { name: "Issue" }) as HTMLButtonElement)
+				.disabled,
+		).toBe(true);
+	});
 });

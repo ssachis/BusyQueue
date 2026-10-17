@@ -2,12 +2,22 @@
  * The draft editor (#15): one form for all six document types, with a live
  * preview beside it. Totals in the preview come from the tax engine via
  * `previewTotals`, recomputed on every change; nothing here does arithmetic.
+ *
+ * Saved clients (#14) fill the buyer through the picker; catalog items fill
+ * lines through the description type-ahead. Issue saves pending edits first
+ * and issues only if that save succeeded.
  */
+import { useQueryClient } from "@tanstack/react-query";
 import { useBlocker, useNavigate } from "@tanstack/react-router";
-import { Loader2, Save, Trash2 } from "lucide-react";
+import { Loader2, Printer, Save, Trash2, UserPlus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PageBody, PageHeader } from "#/components/app-shell.tsx";
+import { ClientPicker } from "#/components/clients/client-picker.tsx";
+import {
+	HistoryPanel,
+	historyKey,
+} from "#/components/documents/history/history-panel.tsx";
 import { IssueButton } from "#/components/documents/issue-button.tsx";
 import { DocumentPreview } from "#/components/documents/preview/document-preview.tsx";
 import { TYPE_LABEL } from "#/components/documents/preview/format.ts";
@@ -15,6 +25,7 @@ import { Badge } from "#/components/ui/badge.tsx";
 import { Button } from "#/components/ui/button.tsx";
 import {
 	Card,
+	CardAction,
 	CardContent,
 	CardDescription,
 	CardHeader,
@@ -22,7 +33,9 @@ import {
 } from "#/components/ui/card.tsx";
 import { Input } from "#/components/ui/input.tsx";
 import { Textarea } from "#/components/ui/textarea.tsx";
+import { ClientInput } from "#/lib/clients/client.ts";
 import { DOCUMENT_TYPES } from "#/lib/documents/types.ts";
+import { createClientRecord } from "#/server/clients.ts";
 import {
 	deleteDraftDocument,
 	saveDraftDocument,
@@ -30,7 +43,10 @@ import {
 import type { DocumentPageData } from "#/server/documents/drafts-store.ts";
 import { Field, NativeSelect } from "./field.tsx";
 import {
+	applyClient,
 	type BuyerForm,
+	clearClient,
+	clientInputFromBuyer,
 	type DraftForm,
 	defaultTaxCode,
 	draftCandidate,
@@ -64,7 +80,10 @@ export function DraftEditor({ data }: { data: DocumentPageData }) {
 		JSON.stringify(draftCandidate(initialForm(data), seller)),
 	);
 	const [showErrors, setShowErrors] = useState(false);
-	const [busy, setBusy] = useState<"save" | "delete" | null>(null);
+	const [busy, setBusy] = useState<
+		"save" | "delete" | "client" | "print" | null
+	>(null);
+	const queryClient = useQueryClient();
 
 	const india = seller.country === "IN";
 	const candidate = useMemo(() => draftCandidate(form, seller), [form, seller]);
@@ -93,24 +112,93 @@ export function DraftEditor({ data }: { data: DocumentPageData }) {
 		enableBeforeUnload: () => dirty,
 	});
 
-	const save = useCallback(async () => {
-		if (!parsed.ok) {
-			setShowErrors(true);
-			toast.error("Fix the highlighted fields before saving");
+	/**
+	 * Save the form. Resolves true when the server has exactly what's on
+	 * screen (saved now, or nothing changed), false when it doesn't.
+	 */
+	const save = useCallback(
+		async ({ quiet = false }: { quiet?: boolean } = {}): Promise<boolean> => {
+			if (!parsed.ok) {
+				setShowErrors(true);
+				toast.error("Fix the highlighted fields before saving");
+				return false;
+			}
+			if (!dirty) {
+				if (!quiet) toast.success("Already saved");
+				return true;
+			}
+			setBusy("save");
+			try {
+				await saveDraftDocument({
+					data: { id: doc.id, draft: parsed.draft },
+				});
+				setSaved(JSON.stringify(candidate));
+				setShowErrors(false);
+				if (!quiet) toast.success("Draft saved");
+				void queryClient.invalidateQueries({ queryKey: historyKey(doc.id) });
+				return true;
+			} catch (err) {
+				toast.error(err instanceof Error ? err.message : "Could not save");
+				return false;
+			} finally {
+				setBusy(null);
+			}
+		},
+		[parsed, candidate, dirty, doc.id, queryClient],
+	);
+
+	/** Issue runs this first: what gets issued is what's on screen. */
+	const saveBeforeIssue = useCallback(() => save({ quiet: true }), [save]);
+
+	/** Print preview reads the saved draft, so save first, then open it. */
+	async function printPreview() {
+		const url = `/print/${encodeURIComponent(doc.id)}`;
+		if (!dirty) {
+			window.open(url, "_blank", "noopener");
 			return;
 		}
-		setBusy("save");
+		// Open the tab inside the click (popup blockers), point it once saved.
+		const tab = window.open("about:blank", "_blank");
+		setBusy("print");
+		const ok = await save({ quiet: true });
+		setBusy(null);
+		if (!ok) {
+			tab?.close();
+			return;
+		}
+		if (tab) tab.location.href = url;
+		else window.open(url, "_blank", "noopener");
+	}
+
+	/** "Save as client": a buyer typed by hand becomes a saved client. */
+	async function saveAsClient() {
+		const input = ClientInput.safeParse(
+			clientInputFromBuyer(form.buyer, india ? form.placeOfSupply : ""),
+		);
+		if (!input.success) {
+			setShowErrors(true);
+			const first = input.error.issues[0];
+			toast.error(
+				first
+					? `Can't save the client: ${first.path.join(".") || "buyer"}: ${first.message}`
+					: "Can't save the client",
+			);
+			return;
+		}
+		setBusy("client");
 		try {
-			await saveDraftDocument({ data: { id: doc.id, draft: parsed.draft } });
-			setSaved(JSON.stringify(candidate));
-			setShowErrors(false);
-			toast.success("Draft saved");
+			const id = await createClientRecord({ data: input.data });
+			setForm((f) => ({ ...f, clientId: id }));
+			await queryClient.invalidateQueries({ queryKey: ["clients"] });
+			toast.success(`Saved ${input.data.name} as a client`);
 		} catch (err) {
-			toast.error(err instanceof Error ? err.message : "Could not save");
+			toast.error(
+				err instanceof Error ? err.message : "Could not save the client",
+			);
 		} finally {
 			setBusy(null);
 		}
-	}, [parsed, candidate, doc.id]);
+	}
 
 	// Cmd/Ctrl+S saves.
 	useEffect(() => {
@@ -170,14 +258,32 @@ export function DraftEditor({ data }: { data: DocumentPageData }) {
 					Delete
 				</Button>
 				<Button
+					variant="outline"
+					onClick={printPreview}
+					disabled={busy !== null}
+					title="Opens the print layout in a new tab (saves first)"
+				>
+					{busy === "print" ? (
+						<Loader2 className="animate-spin" />
+					) : (
+						<Printer />
+					)}
+					Print preview
+				</Button>
+				<Button
 					variant={dirty ? "default" : "outline"}
-					onClick={save}
+					onClick={() => void save()}
 					disabled={busy !== null}
 				>
 					{busy === "save" ? <Loader2 className="animate-spin" /> : <Save />}
 					Save draft
 				</Button>
-				<IssueButton documentId={doc.id} status={doc.status} />
+				<IssueButton
+					documentId={doc.id}
+					status={doc.status}
+					beforeIssue={saveBeforeIssue}
+					disabled={busy === "delete" || busy === "client"}
+				/>
 			</PageHeader>
 			<PageBody>
 				<div className="grid items-start gap-6 xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
@@ -249,12 +355,42 @@ export function DraftEditor({ data }: { data: DocumentPageData }) {
 							<CardHeader>
 								<CardTitle>Bill to</CardTitle>
 								<CardDescription>
-									Printed on the document as entered. The country and region
-									decide the tax.
+									Pick a saved client or type the buyer. Printed on the document
+									as entered; the country and region decide the tax.
 								</CardDescription>
-								{/* #14: the saved-client picker goes here and fills these fields. */}
+								{!form.clientId && form.buyer.name.trim() !== "" ? (
+									<CardAction>
+										<Button
+											type="button"
+											variant="outline"
+											size="sm"
+											onClick={saveAsClient}
+											disabled={busy !== null}
+										>
+											{busy === "client" ? (
+												<Loader2 className="animate-spin" />
+											) : (
+												<UserPlus />
+											)}
+											Save as client
+										</Button>
+									</CardAction>
+								) : null}
 							</CardHeader>
 							<CardContent className="grid gap-4 sm:grid-cols-2">
+								<div className="sm:col-span-2">
+									<ClientPicker
+										clientId={form.clientId}
+										linkedName={form.buyer.name}
+										disabled={busy !== null}
+										onPick={(client) => {
+											setForm((f) => applyClient(f, client));
+										}}
+										onClear={() =>
+											setForm((f) => clearClient(f, seller.country))
+										}
+									/>
+								</div>
 								<Field
 									id="buyer-name"
 									label="Name"
@@ -400,6 +536,7 @@ export function DraftEditor({ data }: { data: DocumentPageData }) {
 									taxOptions={taxOptions}
 									defaultTaxCode={defaultTaxCode(seller.country, taxOptions)}
 									sellerCountry={seller.country}
+									currency={form.currency}
 									errors={errors}
 								/>
 							</CardContent>
@@ -448,6 +585,9 @@ export function DraftEditor({ data }: { data: DocumentPageData }) {
 							totals={totals}
 							accentColor={accentColor}
 						/>
+						<div className="pt-4">
+							<HistoryPanel documentId={doc.id} hideWhenQuiet />
+						</div>
 					</aside>
 				</div>
 			</PageBody>

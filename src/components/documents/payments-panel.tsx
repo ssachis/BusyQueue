@@ -40,6 +40,7 @@ import {
 	voidDocumentPayment,
 	voidIssuedDocument,
 } from "#/server/documents/payments.ts";
+import { historyKey } from "./history/history-panel.tsx";
 
 export interface PaymentsPanelProps {
 	documentId: string;
@@ -76,12 +77,19 @@ function localToday(): string {
 const errorMessage = (err: unknown) =>
 	err instanceof Error ? err.message : "Something went wrong";
 
+/** Shared with the document header so its status badge follows payments. */
+export const paymentsQueryKey = (
+	documentId: string,
+	status: PaymentsPanelProps["status"],
+) => ["document-payments", documentId, status];
+
+export const paymentsQueryFn = (documentId: string) => () =>
+	getDocumentPayments({ data: { documentId, today: localToday() } });
+
 export function PaymentsPanel({ documentId, status }: PaymentsPanelProps) {
-	const queryKey = ["document-payments", documentId, status];
 	const query = useQuery({
-		queryKey,
-		queryFn: () =>
-			getDocumentPayments({ data: { documentId, today: localToday() } }),
+		queryKey: paymentsQueryKey(documentId, status),
+		queryFn: paymentsQueryFn(documentId),
 		enabled: status !== "draft",
 		staleTime: 0,
 	});
@@ -89,9 +97,12 @@ export function PaymentsPanel({ documentId, status }: PaymentsPanelProps) {
 	const router = useRouter();
 
 	async function refresh() {
-		await queryClient.invalidateQueries({
-			queryKey: ["document-payments", documentId],
-		});
+		await Promise.all([
+			queryClient.invalidateQueries({
+				queryKey: ["document-payments", documentId],
+			}),
+			queryClient.invalidateQueries({ queryKey: historyKey(documentId) }),
+		]);
 		await router.invalidate();
 	}
 
@@ -521,7 +532,7 @@ function VoidDocumentControl({
 				<Textarea
 					id="void-reason"
 					maxLength={500}
-					placeholder="e.g. Issued to the wrong school"
+					placeholder="e.g. Issued to the wrong client"
 					value={reason}
 					onChange={(e) => setReason(e.target.value)}
 				/>

@@ -1,5 +1,11 @@
-import { Link } from "@tanstack/react-router";
-import { Check, Loader2, RotateCcw, Save, TriangleAlert } from "lucide-react";
+import {
+	Check,
+	CopyPlus,
+	Loader2,
+	RotateCcw,
+	Save,
+	TriangleAlert,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PageBody, PageHeader } from "#/components/app-shell.tsx";
@@ -13,6 +19,7 @@ import {
 	CardTitle,
 } from "#/components/ui/card.tsx";
 import type {
+	ExistingInvoice,
 	ImportErrorResponse,
 	ImportResponse,
 	SavedImport,
@@ -64,6 +71,8 @@ export function ImportPage({ stored }: { stored?: StoredImport | null }) {
 	);
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState<SavedImport | null>(stored?.saved ?? null);
+	/** Set when the server refused the save: same vendor and number on file. */
+	const [refused, setRefused] = useState<ExistingInvoice[] | null>(null);
 
 	useEffect(
 		() => () =>
@@ -82,6 +91,7 @@ export function ImportPage({ stored }: { stored?: StoredImport | null }) {
 		setDraft(null);
 		setUncertain(new Set());
 		setSaved(null);
+		setRefused(null);
 		setPreview(null);
 	}
 
@@ -116,6 +126,8 @@ export function ImportPage({ stored }: { stored?: StoredImport | null }) {
 
 	function edit(next: ImportDraft, path: string) {
 		setDraft(next);
+		// A new vendor or number needs a fresh duplicate check on save.
+		if (path === "vendor" || path === "invoiceNumber") setRefused(null);
 		if (uncertain.has(path)) {
 			setUncertain((u) => new Set([...u].filter((p) => p !== path)));
 		}
@@ -127,14 +139,22 @@ export function ImportPage({ stored }: { stored?: StoredImport | null }) {
 		setUncertain((u) => new Set(pathsWithoutLine(u, index)));
 	}
 
-	async function save() {
+	async function save(allowDuplicate = false) {
 		if (!result || !draft || issueCount > 0) return;
 		setSaving(true);
 		try {
 			const out = await saveImport({
-				data: { importId: result.importId, draft },
+				data: { importId: result.importId, draft, allowDuplicate },
 			});
+			if (out.status === "duplicate") {
+				setRefused(out.existing);
+				toast.error(
+					"Not saved: this vendor and invoice number are already on file",
+				);
+				return;
+			}
 			setSaved(out);
+			setRefused(null);
 			setUncertain(new Set());
 			toast.success(`Saved as ${out.invoiceId}`);
 		} catch (e) {
@@ -145,6 +165,7 @@ export function ImportPage({ stored }: { stored?: StoredImport | null }) {
 	}
 
 	const toCheck = [...uncertain].filter((p) => !issues[p]).length;
+	const duplicates = refused ?? result?.existing ?? [];
 
 	return (
 		<>
@@ -238,27 +259,57 @@ export function ImportPage({ stored }: { stored?: StoredImport | null }) {
 									</CardDescription>
 								</CardHeader>
 								<CardContent className="space-y-6">
-									{result.existing.length ? (
-										<div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm">
-											<TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" />
-											<span>
-												Invoice number {draft.invoiceNumber} is already on file
-												as{" "}
-												{result.existing.map((e, i) => (
-													<span key={e.id}>
-														{i > 0 ? ", " : ""}
-														<Link
-															to="/"
-															search={{ invoice: e.id }}
-															className="font-medium underline underline-offset-4"
-														>
-															{e.id}
-														</Link>{" "}
-														({e.vendor})
-													</span>
-												))}
-												. Saving creates a separate copy.
-											</span>
+									{duplicates.length && !saved ? (
+										<div
+											role={refused ? "alert" : undefined}
+											className={
+												refused
+													? "space-y-3 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm"
+													: "space-y-3 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm"
+											}
+										>
+											<div className="flex items-start gap-2">
+												<TriangleAlert
+													className={
+														refused
+															? "mt-0.5 size-4 shrink-0 text-destructive"
+															: "mt-0.5 size-4 shrink-0 text-warning"
+													}
+												/>
+												<span>
+													{refused ? (
+														<span className="font-medium">Not saved. </span>
+													) : null}
+													{draft.vendor || "This vendor"} invoice{" "}
+													{draft.invoiceNumber} is already on file as{" "}
+													{duplicates.map((e, i) => (
+														<span key={e.id}>
+															{i > 0 ? ", " : ""}
+															<a
+																href={`/review?invoice=${encodeURIComponent(e.id)}`}
+																className="font-medium underline underline-offset-4"
+															>
+																{e.id}
+															</a>{" "}
+															({e.vendor} {e.invoiceNumber})
+														</span>
+													))}
+													. Saving it again would count the same bill twice, so
+													saving is refused. If this really is a different bill,
+													save it as a separate copy.
+												</span>
+											</div>
+											<div className="flex justify-end">
+												<Button
+													variant="outline"
+													size="sm"
+													onClick={() => save(true)}
+													disabled={saving || issueCount > 0}
+												>
+													<CopyPlus />
+													Save anyway as a separate copy
+												</Button>
+											</div>
 										</div>
 									) : null}
 									<DraftForm
@@ -288,7 +339,7 @@ export function ImportPage({ stored }: { stored?: StoredImport | null }) {
 												</Button>
 											) : null}
 											<Button
-												onClick={save}
+												onClick={() => save()}
 												disabled={saving || saved !== null || issueCount > 0}
 											>
 												{saving ? (

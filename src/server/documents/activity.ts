@@ -9,7 +9,7 @@ import { documentActivity } from "#/db/schema/activity.ts";
 import type { ActivityKind } from "#/lib/documents/types.ts";
 
 /** No sign-in for the hackathon; replace with the session user later. */
-export const DEFAULT_ACTOR = "Food Services Office";
+export const DEFAULT_ACTOR = "Billing office";
 
 export function activityInsert(
 	db: Db,

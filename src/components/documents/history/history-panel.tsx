@@ -28,11 +28,29 @@ const when = (iso: string) =>
 		timeStyle: "short",
 	});
 
-export function HistoryPanel({ documentId }: { documentId: string }) {
+export function HistoryPanel({
+	documentId,
+	hideWhenQuiet = false,
+}: {
+	documentId: string;
+	/**
+	 * Drafts: render nothing until there is more to show than "Draft
+	 * created" (a link to another document, or later activity).
+	 */
+	hideWhenQuiet?: boolean;
+}) {
 	const history = useQuery({
 		queryKey: historyKey(documentId),
 		queryFn: () => getDocumentHistory({ data: { documentId } }),
 	});
+
+	if (
+		hideWhenQuiet &&
+		(!history.data ||
+			(history.data.related.length === 0 && history.data.activity.length <= 1))
+	) {
+		return null;
+	}
 
 	return (
 		<Card>
