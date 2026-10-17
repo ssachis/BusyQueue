@@ -1,14 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PageBody, PageHeader } from "#/components/app-shell.tsx";
-import { siteConfig } from "#/config/site.ts";
+import { ReviewPage } from "#/components/review/review-page.tsx";
 
-export const Route = createFileRoute("/")({ component: Home });
-
-function Home() {
-	return (
-		<>
-			<PageHeader title={siteConfig.name} />
-			<PageBody />
-		</>
-	);
-}
+export const Route = createFileRoute("/")({ component: ReviewPage });
