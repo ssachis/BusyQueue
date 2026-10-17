@@ -30,8 +30,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 					onClick={onNavigate}
 					className="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-[15px] text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
 					activeProps={{
-						className:
-							"bg-sidebar-primary/10 font-medium text-sidebar-primary",
+						className: "bg-sidebar-primary/10 font-medium text-sidebar-primary",
 					}}
 				>
 					<Icon className="size-[18px] shrink-0" />

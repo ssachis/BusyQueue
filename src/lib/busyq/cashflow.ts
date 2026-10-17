@@ -3,6 +3,7 @@
  * amounts are minor units.
  */
 import { toMinor } from "#/lib/money/index.ts";
+
 /** Just the fields the chart needs, so DB rows and parsed files both fit. */
 type Bill = { issueDate: string; statedTotal: string; currency: string };
 type Paid = { paidOn: string; amount: string; currency: string };
