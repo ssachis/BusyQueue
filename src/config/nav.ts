@@ -1,6 +1,7 @@
 import {
 	BellRing,
 	Building2,
+	ChartColumn,
 	ClipboardCheck,
 	FileScan,
 	FileText,
@@ -26,6 +27,7 @@ export const mainNav: NavItem[] = [
 	{ to: "/catalog", label: "Items", icon: Package },
 	{ to: "/contracts", label: "Contracts", icon: ScrollText },
 	{ to: "/import", label: "Import", icon: FileScan },
+	{ to: "/projections", label: "Projections", icon: ChartColumn },
 	{ to: "/reminders", label: "Reminders", icon: BellRing },
 	{ to: "/settings/business", label: "Business", icon: Building2 },
 ];

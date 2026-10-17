@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ImportRouteImport } from './routes/import'
+import { Route as ProjectionsRouteImport } from './routes/projections'
 import { Route as RemindersRouteImport } from './routes/reminders'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiImportsRouteImport } from './routes/api/imports'
@@ -38,6 +39,11 @@ const IndexRoute = IndexRouteImport.update({
 const ImportRoute = ImportRouteImport.update({
   id: '/import',
   path: '/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectionsRoute = ProjectionsRouteImport.update({
+  id: '/projections',
+  path: '/projections',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RemindersRoute = RemindersRouteImport.update({
@@ -134,6 +140,7 @@ const SettingsBusinessRoute = SettingsBusinessRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
+  '/projections': typeof ProjectionsRoute
   '/reminders': typeof RemindersRoute
   '/api/chat': typeof ApiChatRoute
   '/api/imports': typeof ApiImportsRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
+  '/projections': typeof ProjectionsRoute
   '/reminders': typeof RemindersRoute
   '/api/chat': typeof ApiChatRoute
   '/api/imports': typeof ApiImportsRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
+  '/projections': typeof ProjectionsRoute
   '/reminders': typeof RemindersRoute
   '/api/chat': typeof ApiChatRoute
   '/api/imports': typeof ApiImportsRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/import'
+    | '/projections'
     | '/reminders'
     | '/api/chat'
     | '/api/imports'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/import'
+    | '/projections'
     | '/reminders'
     | '/api/chat'
     | '/api/imports'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/import'
+    | '/projections'
     | '/reminders'
     | '/api/chat'
     | '/api/imports'
@@ -270,6 +282,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ImportRoute: typeof ImportRoute
+  ProjectionsRoute: typeof ProjectionsRoute
   RemindersRoute: typeof RemindersRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiImportsRoute: typeof ApiImportsRoute
@@ -304,6 +317,13 @@ declare module '@tanstack/react-router' {
       path: '/import'
       fullPath: '/import'
       preLoaderRoute: typeof ImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projections': {
+      id: '/projections'
+      path: '/projections'
+      fullPath: '/projections'
+      preLoaderRoute: typeof ProjectionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reminders': {
@@ -438,6 +458,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ImportRoute: ImportRoute,
+  ProjectionsRoute: ProjectionsRoute,
   RemindersRoute: RemindersRoute,
   ApiChatRoute: ApiChatRoute,
   ApiImportsRoute: ApiImportsRoute,
