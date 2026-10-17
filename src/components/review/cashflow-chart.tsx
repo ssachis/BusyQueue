@@ -10,7 +10,7 @@ const compact = (minor: number) => {
 
 /**
  * Bills in versus money paid out, by month. Plain SVG so it adds no
- * dependency. Bars use the chart tokens (dark = bills in, light = paid out).
+ * dependency. Bars use the chart tokens (solid = bills in, faded = paid out).
  */
 export function CashflowChart({ data }: { data: CashflowMonth[] }) {
 	const width = 320;
@@ -53,7 +53,7 @@ export function CashflowChart({ data }: { data: CashflowMonth[] }) {
 							width={bar}
 							height={top + plot - y(d.billedMinor)}
 							rx={3}
-							className="fill-foreground"
+							className="fill-primary-foreground"
 						/>
 						<rect
 							x={cx + 1.5}
@@ -61,7 +61,7 @@ export function CashflowChart({ data }: { data: CashflowMonth[] }) {
 							width={bar}
 							height={top + plot - y(d.paidMinor)}
 							rx={3}
-							className="fill-card"
+							className="fill-primary-foreground/50"
 						/>
 						<text
 							x={cx - bar / 2 - 1.5}

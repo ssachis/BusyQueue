@@ -136,16 +136,16 @@ export function ReviewPage() {
 
 				<div className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
 					<section aria-label="Invoices" className="space-y-5">
-						<div className="rounded-3xl bg-gradient-to-br from-chart-1 to-chart-2 p-6 text-foreground">
+						<div className="rounded-3xl bg-gradient-to-br from-chart-1 to-chart-5 p-6 text-primary-foreground shadow-lg">
 							<div className="flex items-baseline justify-between gap-3">
-								<h2 className="font-serif text-xl">Cash flow</h2>
-								<ul className="flex gap-4 text-xs text-foreground/70">
+								<h2 className="text-base font-semibold">Cash flow</h2>
+								<ul className="flex gap-4 text-xs text-primary-foreground/80">
 									<li className="flex items-center gap-1.5">
-										<span aria-hidden className="size-2 rounded-full bg-foreground" />
+										<span aria-hidden className="size-2 rounded-full bg-primary-foreground" />
 										Bills in
 									</li>
 									<li className="flex items-center gap-1.5">
-										<span aria-hidden className="size-2 rounded-full bg-card" />
+										<span aria-hidden className="size-2 rounded-full bg-primary-foreground/50" />
 										Paid out
 									</li>
 								</ul>
@@ -334,7 +334,7 @@ function Hero({
 			</div>
 
 			<div>
-				<div className="font-serif text-6xl font-medium tracking-tight tabular-nums sm:text-8xl">
+				<div className="text-6xl font-semibold tracking-tighter tabular-nums sm:text-7xl">
 					{usd(total)}
 				</div>
 				<p className="mt-2 text-lg text-muted-foreground">
@@ -411,7 +411,7 @@ function InvoiceDetail({
 	return (
 		<section aria-label="Invoice detail" className="space-y-6">
 			<div>
-				<h2 className="font-serif text-3xl tracking-tight">
+				<h2 className="text-2xl font-semibold tracking-tight">
 					{invoice.vendor}
 				</h2>
 				<p className="mt-1 text-sm text-muted-foreground">

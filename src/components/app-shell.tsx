@@ -29,10 +29,10 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 					to={to}
 					activeOptions={{ exact }}
 					onClick={onNavigate}
-					className="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-[15px] text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+					className="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-[15px] text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
 					activeProps={{
 						className:
-							"bg-sidebar-accent font-medium text-sidebar-accent-foreground",
+							"bg-sidebar-primary/10 font-medium text-sidebar-primary",
 					}}
 				>
 					<Icon className="size-[18px] shrink-0" />
@@ -50,7 +50,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 	return (
 		<div className="flex min-h-screen flex-col md:flex-row">
 			{/* Desktop sidebar */}
-			<aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-hidden bg-sidebar text-sidebar-foreground md:flex">
+			<aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
 				<div className="relative px-6 pt-8 pb-8">
 					<Brand />
 					<p className="mt-2 text-sm text-sidebar-foreground/50">
