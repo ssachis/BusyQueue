@@ -97,7 +97,7 @@ describe("runAgent", () => {
 		expect(result.status).toBe("completed");
 		expect(result.toolCalls).toHaveLength(8);
 		// The rejected draft shows up as a failed tool call, then the retry succeeds.
-		expect(result.toolCalls.slice(-2)).toEqual([
+		expect(result.toolCalls.slice(-2)).toMatchObject([
 			{
 				name: "save_dispute_draft",
 				status: "error",
@@ -122,7 +122,8 @@ describe("runAgent", () => {
 		});
 		expect(rejected.error.message).toContain("$75.00");
 
-		expect(finished[0]).toMatchObject({ status: "completed", toolCalls: 8 });
+		expect(finished[0]?.status).toBe("completed");
+		expect(finished[0]?.toolCalls).toHaveLength(8);
 		expect(finished[0]?.draft?.totalImpactMinor).toBe(7200);
 	});
 
@@ -143,10 +144,11 @@ describe("runAgent", () => {
 
 		expect(result.status).toBe("completed");
 		expect(result.unpricedLines).toBe(1);
-		expect(result.toolCalls[1]).toEqual({
+		expect(result.toolCalls[1]).toMatchObject({
 			name: "lookup_vendor_prices",
 			status: "error",
 			errorCode: "price_not_found",
+			details: { vendor: "SYSCO Foods" },
 		});
 		expect(result.total.minor).toBe(0);
 		expect(result.draft).toBeNull();
