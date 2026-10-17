@@ -20,7 +20,7 @@ Rule to say out loud: **AI explains, code calculates, a human approves.** Every 
 
 ## Click path
 
-**1. The problem (30 s).** Review page (`/`). "A district food-service office buys from three contract vendors. Prices are fixed by contract, so a bill above the agreed price is money lost. Here are 40 invoices. 19 planted mistakes: overcharges, duplicate lines, wrong totals, duplicate payments." (Fictional district: Northfield Unified. Say it.)
+**1. The problem (30 s).** Review page (`/`). "A district food-service office buys from three contract vendors. Prices are fixed by contract, so a bill above the agreed price is money lost. Here are 40 invoices. 21 planted mistakes: overcharges, duplicate lines, wrong totals, duplicate payments, payments with no invoice." (Fictional district: Northfield Unified. Say it.)
 
 **2. One run, 6+ tool calls (45 s).** PRISM, **Sessions**. Open one run. Point at the span tree: `get_invoice`, `lookup_vendor_prices`, `compare_lines`, `check_invoice`, `check_payments`, `calculate_impact`, `save_dispute_draft`, with `llm:` spans between them. "One session per invoice. Every model call and every tool call is a span. The agent version is on the root span."
 
