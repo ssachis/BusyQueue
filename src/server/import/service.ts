@@ -20,9 +20,8 @@ import type {
 	ImportErrorResponse,
 	ImportResponse,
 	ImportRunSummary,
-	SavedImport,
-	StoredImport,
 	SaveImportResult,
+	StoredImport,
 } from "#/lib/import/api.ts";
 import {
 	findDuplicateInvoices,
@@ -260,12 +259,8 @@ export async function loadImport(
 		.where(eq(invoiceImports.id, importId));
 	if (!row) return null;
 	const draft = row.extracted;
-	const existing = draft?.invoiceNumber
-		? await db
-				.select({ id: invoices.id, vendor: invoices.vendorName })
-				.from(invoices)
-				.where(eq(invoices.invoiceNumber, draft.invoiceNumber))
-		: [];
+	// Same vendor + normalised number rule as upload and save.
+	const existing = draft ? await storedDuplicates(draft) : [];
 	return {
 		importId: row.id,
 		status: row.status,
