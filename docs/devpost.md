@@ -28,7 +28,15 @@ The demo story is failure, fix, alert.
 - **Alert:** v1 deliberately matches vendors and units by exact string. On invoices that spell a vendor or unit differently ("HARBOR FOODS INC", "CS", billed per case against a per-lb contract), `lookup_vendor_prices` fails with `price_not_found`. A PRISM alert on failed tool calls fires on a real v1 run.
 - **Root cause:** 14 of 40 invoices fail the same way, which PRISM clusters. We fixed the cause in v2 (vendor alias normalisation and pack-size conversion) and re-ran the **same inputs**: failures cleared.
 
-Rules-only scores on the 40-invoice set: v1 recall 68.4% with 59 unpriced lines; v2 recall 100%, zero false flags, $9,878.95 found of $9,878.95 planted. A batch runner prints this report for any agent version against a local or deployed URL.
+Live results, 40 invoices run through the agent on Nicrron with PRISM tracing, same inputs for both versions (6-7 tool calls per run, all 80 runs completed):
+
+| | v1 | v2 |
+|---|---|---|
+| Runs with a failed `lookup_vendor_prices` | 14 of 40 | 0 of 40 |
+| Planted problems found | 13 of 19 | 19 of 19 |
+| False flags | 0 | 0 |
+
+The failure is quiet: the v1 runs finish, but they could not price some lines, so overcharges on them went unseen. The v2 findings match the deterministic rules exactly. A batch runner prints the report for any agent version against a local or deployed URL.
 
 ## How we built it
 
