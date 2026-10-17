@@ -1,0 +1,18 @@
+vendor,item,unit,unit_price,currency,pack_unit,pack_size
+Harbor Foods,Chicken breast,lb,2.10,USD,case,40
+Harbor Foods,Ground beef 85/15,lb,3.45,USD,case,40
+Harbor Foods,Brown rice,bag,14.20,USD,,
+Harbor Foods,Pasta penne,case,21.75,USD,,
+Harbor Foods,Canned tomatoes,case,18.90,USD,,
+Harbor Foods,Whole grain bread,case,16.40,USD,,
+Valley Fresh Produce,Romaine lettuce,case,18.50,USD,,
+Valley Fresh Produce,Apples,case,24.00,USD,,
+Valley Fresh Produce,Carrots,lb,0.78,USD,case,50
+Valley Fresh Produce,Bananas,lb,0.62,USD,case,40
+Valley Fresh Produce,Broccoli,case,22.30,USD,,
+Valley Fresh Produce,Oranges,case,26.80,USD,,
+Dairy Pure,Milk 1% half-pint,case,9.85,USD,,
+Dairy Pure,Milk skim half-pint,case,9.85,USD,,
+Dairy Pure,Cheddar shredded,lb,3.60,USD,case,20
+Dairy Pure,Yogurt cup,case,17.25,USD,,
+Dairy Pure,Eggs large,case,31.00,USD,,

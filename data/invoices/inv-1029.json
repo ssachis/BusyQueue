@@ -1,0 +1,43 @@
+{
+  "id": "inv-1029",
+  "vendor": "Harbor Foods",
+  "invoiceNumber": "HF-1029",
+  "issueDate": "2026-09-28",
+  "dueDate": "2026-10-28",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Chicken breast",
+      "quantity": "200",
+      "unit": "lb",
+      "unitPrice": "2.10",
+      "amount": "420.00"
+    },
+    {
+      "lineNo": 2,
+      "item": "Pasta penne",
+      "quantity": "15",
+      "unit": "case",
+      "unitPrice": "22.25",
+      "amount": "333.75"
+    },
+    {
+      "lineNo": 3,
+      "item": "Brown rice",
+      "quantity": "12",
+      "unit": "bag",
+      "unitPrice": "14.20",
+      "amount": "170.40"
+    },
+    {
+      "lineNo": 4,
+      "item": "Whole grain bread",
+      "quantity": "15",
+      "unit": "case",
+      "unitPrice": "16.40",
+      "amount": "246.00"
+    }
+  ],
+  "statedTotal": "1170.15"
+}

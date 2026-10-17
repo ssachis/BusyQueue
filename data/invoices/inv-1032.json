@@ -1,0 +1,43 @@
+{
+  "id": "inv-1032",
+  "vendor": "Harbor Foods",
+  "invoiceNumber": "HF-1032",
+  "issueDate": "2026-10-05",
+  "dueDate": "2026-11-04",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Whole grain bread",
+      "quantity": "20",
+      "unit": "case",
+      "unitPrice": "16.40",
+      "amount": "328.00"
+    },
+    {
+      "lineNo": 2,
+      "item": "Ground beef 85/15",
+      "quantity": "800",
+      "unit": "lb",
+      "unitPrice": "3.45",
+      "amount": "2760.00"
+    },
+    {
+      "lineNo": 3,
+      "item": "Pasta penne",
+      "quantity": "40",
+      "unit": "case",
+      "unitPrice": "21.75",
+      "amount": "870.00"
+    },
+    {
+      "lineNo": 4,
+      "item": "Canned tomatoes",
+      "quantity": "60",
+      "unit": "case",
+      "unitPrice": "18.90",
+      "amount": "1134.00"
+    }
+  ],
+  "statedTotal": "5092.00"
+}

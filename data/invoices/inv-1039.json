@@ -1,0 +1,35 @@
+{
+  "id": "inv-1039",
+  "vendor": "Harbor Foods",
+  "invoiceNumber": "HF-1039",
+  "issueDate": "2026-10-18",
+  "dueDate": "2026-11-17",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Brown rice",
+      "quantity": "10",
+      "unit": "bag",
+      "unitPrice": "14.20",
+      "amount": "142.00"
+    },
+    {
+      "lineNo": 2,
+      "item": "Canned tomatoes",
+      "quantity": "60",
+      "unit": "case",
+      "unitPrice": "18.90",
+      "amount": "1134.00"
+    },
+    {
+      "lineNo": 3,
+      "item": "Pasta penne",
+      "quantity": "60",
+      "unit": "case",
+      "unitPrice": "21.75",
+      "amount": "1305.00"
+    }
+  ],
+  "statedTotal": "2581.00"
+}

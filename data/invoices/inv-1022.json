@@ -1,0 +1,59 @@
+{
+  "id": "inv-1022",
+  "vendor": "HARBOR FOODS INC",
+  "invoiceNumber": "HF-1022",
+  "issueDate": "2026-09-15",
+  "dueDate": "2026-10-15",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Ground beef 85/15",
+      "quantity": "10",
+      "unit": "case",
+      "unitPrice": "138.00",
+      "amount": "1380.00"
+    },
+    {
+      "lineNo": 2,
+      "item": "Canned tomatoes",
+      "quantity": "20",
+      "unit": "CS",
+      "unitPrice": "18.90",
+      "amount": "378.00"
+    },
+    {
+      "lineNo": 3,
+      "item": "Whole grain bread",
+      "quantity": "10",
+      "unit": "CS",
+      "unitPrice": "16.40",
+      "amount": "164.00"
+    },
+    {
+      "lineNo": 4,
+      "item": "Brown rice",
+      "quantity": "12",
+      "unit": "bags",
+      "unitPrice": "14.20",
+      "amount": "170.40"
+    },
+    {
+      "lineNo": 5,
+      "item": "Chicken breast",
+      "quantity": "3",
+      "unit": "case",
+      "unitPrice": "84.00",
+      "amount": "252.00"
+    },
+    {
+      "lineNo": 6,
+      "item": "Ground beef 85/15",
+      "quantity": "10",
+      "unit": "case",
+      "unitPrice": "138.00",
+      "amount": "1380.00"
+    }
+  ],
+  "statedTotal": "3724.40"
+}

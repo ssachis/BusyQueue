@@ -1,0 +1,35 @@
+{
+  "id": "inv-1026",
+  "vendor": "Dairy Pure Co.",
+  "invoiceNumber": "DP-1026",
+  "issueDate": "2026-09-23",
+  "dueDate": "2026-10-23",
+  "currency": "USD",
+  "lines": [
+    {
+      "lineNo": 1,
+      "item": "Eggs large",
+      "quantity": "30",
+      "unit": "CS",
+      "unitPrice": "31.00",
+      "amount": "930.00"
+    },
+    {
+      "lineNo": 2,
+      "item": "Milk skim half-pint",
+      "quantity": "40",
+      "unit": "Case",
+      "unitPrice": "9.85",
+      "amount": "394.00"
+    },
+    {
+      "lineNo": 3,
+      "item": "Milk 1% half-pint",
+      "quantity": "12",
+      "unit": "CS",
+      "unitPrice": "9.85",
+      "amount": "118.20"
+    }
+  ],
+  "statedTotal": "1442.20"
+}
