@@ -136,16 +136,16 @@ export function ReviewPage() {
 
 				<div className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
 					<section aria-label="Invoices" className="space-y-5">
-						<div className="rounded-3xl bg-gradient-to-br from-sidebar to-chart-1 p-6 text-sidebar-foreground shadow-lg shadow-chart-1/20">
+						<div className="rounded-3xl bg-gradient-to-br from-chart-1 to-chart-2 p-6 text-foreground">
 							<div className="flex items-baseline justify-between gap-3">
-								<h2 className="text-sm font-medium">Cash flow</h2>
-								<ul className="flex gap-4 text-xs text-sidebar-foreground/80">
+								<h2 className="font-serif text-xl">Cash flow</h2>
+								<ul className="flex gap-4 text-xs text-foreground/70">
 									<li className="flex items-center gap-1.5">
-										<span aria-hidden className="size-2 rounded-full bg-chart-1" />
+										<span aria-hidden className="size-2 rounded-full bg-foreground" />
 										Bills in
 									</li>
 									<li className="flex items-center gap-1.5">
-										<span aria-hidden className="size-2 rounded-full bg-chart-2" />
+										<span aria-hidden className="size-2 rounded-full bg-card" />
 										Paid out
 									</li>
 								</ul>
@@ -169,7 +169,7 @@ export function ReviewPage() {
 									className={cn(
 										"flex-1 rounded-lg px-2 py-1.5 text-center text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
 										filter === f.id &&
-											"bg-card font-medium text-foreground shadow-sm",
+											"bg-primary font-medium text-primary-foreground",
 									)}
 								>
 									{f.label}{" "}
@@ -307,7 +307,7 @@ function Hero({
 				<div
 					role="radiogroup"
 					aria-label="How prices are matched"
-					className="inline-flex rounded-full bg-muted p-1 text-sm"
+					className="inline-flex rounded-full border p-1 text-sm"
 				>
 					{(
 						[
@@ -324,7 +324,7 @@ function Hero({
 							className={cn(
 								"rounded-full px-4 py-1.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
 								version === v &&
-									"bg-card font-medium text-foreground shadow-sm hover:text-foreground",
+									"bg-primary font-medium text-primary-foreground hover:text-primary-foreground",
 							)}
 						>
 							{label}
@@ -334,7 +334,7 @@ function Hero({
 			</div>
 
 			<div>
-				<div className="bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-6xl font-semibold tracking-tighter tabular-nums text-transparent sm:text-7xl">
+				<div className="font-serif text-6xl font-medium tracking-tight tabular-nums sm:text-8xl">
 					{usd(total)}
 				</div>
 				<p className="mt-2 text-lg text-muted-foreground">
@@ -411,7 +411,7 @@ function InvoiceDetail({
 	return (
 		<section aria-label="Invoice detail" className="space-y-6">
 			<div>
-				<h2 className="text-xl font-semibold tracking-tight">
+				<h2 className="font-serif text-3xl tracking-tight">
 					{invoice.vendor}
 				</h2>
 				<p className="mt-1 text-sm text-muted-foreground">
