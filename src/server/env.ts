@@ -7,6 +7,16 @@ const optionalString = z.preprocess(
 	z.string().min(1).optional(),
 );
 
+/** "a, b,,c" → ["a", "b", "c"]; blank → unset, so the default applies. */
+const commaList = z.preprocess((v) => {
+	if (typeof v !== "string") return v;
+	const list = v
+		.split(",")
+		.map((s) => s.trim())
+		.filter(Boolean);
+	return list.length ? list : undefined;
+}, z.array(z.string().min(1)).min(1).optional());
+
 const serverEnvSchema = z.object({
 	// ── Nicrron (OpenAI-compatible model gateway) ──
 	NICRRON_API_KEY: optionalString,
@@ -49,6 +59,22 @@ const serverEnvSchema = z.object({
 				.map((m) => m.trim())
 				.filter(Boolean),
 		),
+	// ── AI import (photo / PDF of a vendor invoice) ──
+	/** Vision model for photos and scans (PNG, JPEG, WebP). */
+	IMPORT_MODEL: z.string().min(1).default("anthropic/claude-sonnet-5-5"),
+	/** Comma list Nicrron cascades to, in order, when IMPORT_MODEL fails. */
+	IMPORT_FALLBACK_MODELS: commaList.default([
+		"openai/gpt-5.4",
+		"anthropic/claude-haiku-5-5",
+	]),
+	/**
+	 * Comma list for PDFs, primary first. Only models that read OpenAI-style
+	 * `file` parts through Nicrron: Anthropic models silently drop them.
+	 */
+	IMPORT_PDF_MODELS: commaList.default([
+		"openai/gpt-5.4",
+		"openai/gpt-5.4-mini",
+	]),
 
 	// ── PRISM tracing (disabled when the key is unset) ──
 	PRISMTRACE_API_KEY: optionalString,

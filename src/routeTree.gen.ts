@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ImportRouteImport } from './routes/import'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiImportsRouteImport } from './routes/api/imports'
 import { Route as ApiRunsRouteImport } from './routes/api/runs'
 import { Route as ContractsIndexRouteImport } from './routes/contracts/index'
 import { Route as ContractsContractIdRouteImport } from './routes/contracts/$contractId'
@@ -22,9 +24,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ImportRoute = ImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiImportsRoute = ApiImportsRouteImport.update({
+  id: '/api/imports',
+  path: '/api/imports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiRunsRoute = ApiRunsRouteImport.update({
@@ -55,7 +67,9 @@ const SettingsBusinessRoute = SettingsBusinessRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/import': typeof ImportRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/imports': typeof ApiImportsRoute
   '/api/runs': typeof ApiRunsRoute
   '/contracts/$contractId': typeof ContractsContractIdRoute
   '/contracts/new': typeof ContractsNewRoute
@@ -64,7 +78,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/import': typeof ImportRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/imports': typeof ApiImportsRoute
   '/api/runs': typeof ApiRunsRoute
   '/contracts/$contractId': typeof ContractsContractIdRoute
   '/contracts/new': typeof ContractsNewRoute
@@ -74,7 +90,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/import': typeof ImportRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/imports': typeof ApiImportsRoute
   '/api/runs': typeof ApiRunsRoute
   '/contracts/$contractId': typeof ContractsContractIdRoute
   '/contracts/new': typeof ContractsNewRoute
@@ -85,7 +103,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/import'
     | '/api/chat'
+    | '/api/imports'
     | '/api/runs'
     | '/contracts/$contractId'
     | '/contracts/new'
@@ -94,7 +114,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/import'
     | '/api/chat'
+    | '/api/imports'
     | '/api/runs'
     | '/contracts/$contractId'
     | '/contracts/new'
@@ -103,7 +125,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/import'
     | '/api/chat'
+    | '/api/imports'
     | '/api/runs'
     | '/contracts/$contractId'
     | '/contracts/new'
@@ -113,7 +137,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ImportRoute: typeof ImportRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiImportsRoute: typeof ApiImportsRoute
   ApiRunsRoute: typeof ApiRunsRoute
   ContractsContractIdRoute: typeof ContractsContractIdRoute
   ContractsNewRoute: typeof ContractsNewRoute
@@ -130,11 +156,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/import': {
+      id: '/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof ImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
       fullPath: '/api/chat'
       preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/imports': {
+      id: '/api/imports'
+      path: '/api/imports'
+      fullPath: '/api/imports'
+      preLoaderRoute: typeof ApiImportsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/runs': {
@@ -177,7 +217,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ImportRoute: ImportRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiImportsRoute: ApiImportsRoute,
   ApiRunsRoute: ApiRunsRoute,
   ContractsContractIdRoute: ContractsContractIdRoute,
   ContractsNewRoute: ContractsNewRoute,
