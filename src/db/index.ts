@@ -3,6 +3,8 @@ import { drizzle } from "drizzle-orm/d1";
 import * as activity from "./schema/activity.ts";
 import * as business from "./schema/business.ts";
 import * as busyq from "./schema/busyq.ts";
+import * as catalog from "./schema/catalog.ts";
+import * as clients from "./schema/clients.ts";
 import * as contracts from "./schema/contracts.ts";
 import * as documentPayments from "./schema/document-payments.ts";
 import * as documents from "./schema/documents.ts";
@@ -18,6 +20,8 @@ export const schema = {
 	...documentPayments,
 	...contracts,
 	...imports,
+	...clients,
+	...catalog,
 };
 
 /** Drizzle client on the Worker's D1 binding. Server-only. */
