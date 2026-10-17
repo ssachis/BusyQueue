@@ -19,6 +19,7 @@ import {
 	summarizeFailures,
 } from "#/lib/busyq/failures.ts";
 import type { AgentVersion, Finding } from "#/lib/busyq/types.ts";
+import { type CashflowMonth, cashflowByMonth } from "#/lib/busyq/cashflow.ts";
 import { findOrphanPayments } from "#/lib/rules/index.ts";
 import { createD1Store } from "#/server/agent/store.ts";
 
@@ -54,6 +55,8 @@ export interface ReviewSummary {
 	};
 	failures: FailureSummary;
 	orphans: Finding[];
+	/** Bills in versus money paid out, by month. */
+	cashflow: CashflowMonth[];
 	currency: string;
 }
 
@@ -125,6 +128,8 @@ export async function loadReviewSummary(
 		};
 	});
 
+	const paymentRows = await db.select().from(payments);
+
 	// Orphan payments aren't tied to an invoice; only invoice numbers matter here.
 	const orphans = findOrphanPayments(
 		invoiceRows.map((i) => ({
@@ -136,7 +141,7 @@ export async function loadReviewSummary(
 			statedTotal: i.statedTotal,
 			lines: [],
 		})),
-		(await db.select().from(payments)).map((p) => ({
+		paymentRows.map((p) => ({
 			id: p.id,
 			vendor: p.vendorName,
 			invoiceNumber: p.invoiceNumber,
@@ -174,6 +179,7 @@ export async function loadReviewSummary(
 		},
 		failures,
 		orphans,
+		cashflow: cashflowByMonth(invoiceRows, paymentRows),
 		currency: invoiceRows[0]?.currency ?? "USD",
 	};
 }

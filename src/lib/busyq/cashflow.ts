@@ -3,7 +3,9 @@
  * amounts are minor units.
  */
 import { toMinor } from "#/lib/money/index.ts";
-import type { Invoice, Payment } from "./types.ts";
+/** Just the fields the chart needs, so DB rows and parsed files both fit. */
+type Bill = { issueDate: string; statedTotal: string; currency: string };
+type Paid = { paidOn: string; amount: string; currency: string };
 
 export type CashflowMonth = {
 	/** "2026-08" */
@@ -33,8 +35,8 @@ const MONTHS = [
 
 /** Bills in versus payments out, per calendar month, oldest first. Integer minor units. */
 export function cashflowByMonth(
-	invoices: readonly Invoice[],
-	payments: readonly Payment[],
+	invoices: readonly Bill[],
+	payments: readonly Paid[],
 ): CashflowMonth[] {
 	const byMonth = new Map<string, { billed: number; paid: number }>();
 	const slot = (date: string) => {
