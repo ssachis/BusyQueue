@@ -245,7 +245,7 @@ Phases run in order. Every change ends green on `bun run typecheck`,
 This project sends traces to PRISM. Env vars: `PRISMTRACE_API_KEY`,
 `PRISMTRACE_PROJECT_ID`, `PRISMTRACE_HOST`.
 
-Tracing is currently wired at: `src/server/prism.ts` (HTTP ingest client), `src/server/chat.ts` (Nicrron chat turn, traced on success and error), `src/routes/api/chat.ts` (POST /api/chat entry point, assigns `sessionId`), `src/server/env.ts` (PRISM env vars)
+Tracing is currently wired at: `src/server/prism.ts` (HTTP ingest client and `RunTracer` span trees), `src/server/chat.ts` (Nicrron chat turn, traced on success and error), `src/routes/api/chat.ts` (POST /api/chat entry point, assigns `sessionId`), `src/server/agent/run.ts` (agent loop: every model call and tool call is a span), `src/server/agent/tracing.ts` (one PRISM session per run, agent version on the root span), `src/routes/api/runs.ts` (POST /api/runs entry point), `src/server/env.ts` (PRISM env vars)
 
 **Standing rule.** Whenever you add or change an agent, chain, graph, tool,
 retriever, or any entry point that calls a model, wire it to PRISM before you

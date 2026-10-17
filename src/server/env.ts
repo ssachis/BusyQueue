@@ -14,6 +14,12 @@ const serverEnvSchema = z.object({
 	/** Routing preset or concrete model, e.g. nicrron/auto, anthropic/claude-sonnet-5. */
 	NICRRON_MODEL: z.string().min(1).default("nicrron/auto"),
 
+	// ── BusyQ agent ──
+	/** Model for agent runs (tool calling). Overrides NICRRON_MODEL for the agent only. */
+	AGENT_MODEL: z.string().min(1).default("anthropic/claude-sonnet-5-5"),
+	/** Default price-lookup version when a run doesn't ask for one. */
+	AGENT_VERSION: z.enum(["v1", "v2"]).default("v1"),
+
 	// ── PRISM tracing (disabled when the key is unset) ──
 	PRISMTRACE_API_KEY: optionalString,
 	PRISMTRACE_PROJECT_ID: optionalString,
