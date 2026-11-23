@@ -50,7 +50,7 @@ while (queue.length && pages.size < MAX) {
 		pages.set(k, html); console.log("ok", k);
 	} catch (e) { console.log("fail", k, String(e).split("\n")[0]); }
 }
-const banner = `<div style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:99999;background:#111;color:#fff;font:500 12px/1.4 system-ui,sans-serif;padding:8px 14px;border-radius:999px;box-shadow:0 4px 18px rgba(0,0,0,.25)">Static demo with sample data (a fictional school district). Buttons and forms are disabled. <a href="https://github.com/ssachis/BusyQueue" style="color:#9cf">Code on GitHub</a></div>`;
+const banner = `<div style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:99999;background:#111;color:#fff;font:500 12px/1.4 system-ui,sans-serif;padding:8px 14px;border-radius:999px;box-shadow:0 4px 18px rgba(0,0,0,.25)">Static demo with sample data (a fictional school district). Every amount is computed by code; the explanations here are template text instead of AI. Buttons and forms are disabled. <a href="https://github.com/ssachis/BusyQueue" style="color:#9cf">Code on GitHub</a></div>`;
 async function asset(p) {
 	if (assets.has(p)) return assets.get(p);
 	const local = "_assets/" + p.replace(/^\//, "").replace(/[?#].*$/, "").replace(/[^a-zA-Z0-9._/-]/g, "-");
