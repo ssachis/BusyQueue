@@ -23,9 +23,9 @@ while (queue.length && pages.size < MAX) {
 	const path = queue.shift(); const k = key(path);
 	if (seen.has(k)) continue; seen.add(k);
 	try {
-		const res = await page.goto(BASE + k, { waitUntil: "networkidle", timeout: 60000 });
+		const res = await page.goto(BASE + k, { waitUntil: "load", timeout: 120000 });
 		if (!res || res.status() >= 400) { console.log("skip", res?.status(), k); continue; }
-		await page.waitForTimeout(600);
+		await page.waitForLoadState("domcontentloaded"); await page.waitForTimeout(pages.size === 0 ? 8000 : 2500);
 		const links = await page.$$eval("a[href]", (as) => as.map((a) => a.getAttribute("href")));
 		for (const h of links) {
 			if (!h || h.startsWith("http") || h.startsWith("mailto") || h.startsWith("#") || h.startsWith("//")) continue;
