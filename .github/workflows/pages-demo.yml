@@ -1,0 +1,42 @@
+name: Build static demo
+# Runs the app with its sample data, audits every invoice with the real agent loop
+# (scripted model, no API keys), and saves a static copy to demo/ for GitHub Pages:
+# https://ssachis.github.io/BusyQueue/demo/
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/demo/**', '.github/workflows/pages-demo.yml']
+permissions:
+  contents: write
+concurrency: { group: pages-demo, cancel-in-progress: true }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: bun install
+      - run: cp .env.example .dev.vars && cp .github/demo/demo-seed-route.ts src/routes/api/demo-seed.ts
+      - run: bun run db:migrate:local && bun run db:seed:local
+      - name: Start the app
+        run: |
+          nohup bun run dev > dev.log 2>&1 &
+          for i in $(seq 1 90); do curl -sf -o /dev/null http://localhost:3000/ && break; sleep 2; done
+          curl -s -o /dev/null -w "home %{http_code}\n" http://localhost:3000/
+      - name: Audit every invoice (scripted model)
+        run: |
+          curl -s --max-time 600 "http://localhost:3000/api/demo-seed?v=v2" | head -c 3000; echo
+      - name: Crawl to static pages
+        run: |
+          mkdir -p /tmp/crawl && cd /tmp/crawl && npm init -y >/dev/null && npm i playwright@1.48.2 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+          cp $GITHUB_WORKSPACE/.github/demo/crawl.mjs . && rm -rf $GITHUB_WORKSPACE/demo && OUT=$GITHUB_WORKSPACE/demo node crawl.mjs
+      - if: always()
+        run: tail -60 dev.log || true
+      - name: Commit demo/
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add demo && git commit -m "Static demo build" && git pull --rebase && git push || echo "nothing to commit"
