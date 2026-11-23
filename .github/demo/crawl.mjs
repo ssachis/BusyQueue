@@ -16,6 +16,7 @@ const fileFor = (u) => {
 const key = (u) => { const x = new URL(u, BASE); x.hash = ""; return x.pathname + x.search; };
 const seeds = ["/", "/review", "/documents", "/clients", "/catalog", "/contracts", "/inbox", "/projections", "/reminders", "/import", "/import-document", "/settings/business"];
 const assets = new Map();
+const cssRules = new Set();
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 const seen = new Set(); const queue = [...seeds]; const pages = new Map();
@@ -33,11 +34,19 @@ while (queue.length && pages.size < MAX) {
 			if (SKIP.some((r) => r.test(pathname))) continue;
 			if (!seen.has(kk)) queue.push(kk);
 		}
-		const html = await page.evaluate(() => {
-			document.querySelectorAll("script, link[rel=modulepreload], link[rel=preload]").forEach((s) => s.remove());
-			document.querySelectorAll("[data-tanstack-router-devtools], .tsqd-parent-container, [class*=devtools]").forEach((s) => s.remove());
-			return "<!doctype html>\n" + document.documentElement.outerHTML;
+		const { html, rules } = await page.evaluate(() => {
+			const rules = [];
+			for (const sh of document.styleSheets) { try { for (const r of sh.cssRules) rules.push(r.cssText); } catch {} }
+			document.querySelectorAll("script, link[rel=modulepreload], link[rel=preload], link[rel=stylesheet], style").forEach((s) => s.remove());
+			document.querySelectorAll("*").forEach((el) => {
+				const tag = `${el.id} ${typeof el.className === "string" ? el.className : ""}`.toLowerCase();
+				if (el.isConnected && (tag.includes("devtools") || tag.includes("tsqd") || tag.includes("tanstack"))) el.remove();
+			});
+			document.body.lastElementChild?.tagName === "DIV" && !document.body.lastElementChild.querySelector("main, nav, aside") && document.body.lastElementChild.remove();
+			const link = document.createElement("link"); link.rel = "stylesheet"; link.href = "_assets/app.css"; document.head.appendChild(link);
+			return { html: "<!doctype html>\n" + document.documentElement.outerHTML, rules };
 		});
+		for (const r of rules) cssRules.add(r);
 		pages.set(k, html); console.log("ok", k);
 	} catch (e) { console.log("fail", k, String(e).split("\n")[0]); }
 }
@@ -64,6 +73,9 @@ for (const [k, html0] of pages) {
 	html = html.replace(/<form\b/g, '<form onsubmit="return false"').replace("</body>", banner + "</body>");
 	writeFileSync(join(OUT, fileFor(k)), html);
 }
+let css = [...cssRules].join("\n");
+for (const m of css.matchAll(/url\((['"]?)(\/(?!\/)[^)'"]+)\1\)/g)) { const l = await asset(m[2]); css = css.split(m[2]).join("../" + l); }
+mkdirSync(join(OUT, "_assets"), { recursive: true }); writeFileSync(join(OUT, "_assets/app.css"), css);
 writeFileSync(join(OUT, ".nojekyll"), "");
 console.log("pages", pages.size, "assets", assets.size);
 await browser.close();
